@@ -1,0 +1,138 @@
+﻿@using Tecsmart.Suporte.Web.Startup
+@using Tecsmart.Suporte.Crachas.Type
+@{
+    ViewBag.Title = L("Crachas");
+    ViewBag.CurrentPageName = PageNames.Crachas;
+}
+@section scripts
+{
+    <environment names="Development">
+        <script src="~/view-resources/Views/Crachas/Index.js" asp-append-version="true"></script>
+    </environment>
+
+    <environment names="Staging,Production">
+        <script src="~/view-resources/Views/Crachas/Index.min.js" asp-append-version="true"></script>
+    </environment>
+}
+<section class="content-header">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-sm-12">
+                <h1>@L("Crachas")</h1>
+            </div>
+        </div>
+    </div>
+</section>
+<section class="content">
+    <div class="container-fluid">
+        <div id="container-crachas-info"></div>
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header ctm-p-header">
+                        <div class="row">
+                            <div class="col-md-12">
+                                @(Html.DevExtreme().Toolbar()
+                                .ID("tbCrachas")
+                                .Items(items =>
+                                {
+                                    items.Add()
+                                    .Widget(w => w
+                                        .Button()
+                                        .OnClick("novoPedidoCracha")
+                                        .Text("")
+                                        .Type(ButtonType.Default)
+                                        .Icon("add"))
+                                    .Location(ToolbarItemLocation.Before).LocateInMenu(ToolbarItemLocateInMenuMode.Auto);
+
+                                    items.Add()
+                                    .Widget(w => w
+                                        .Button()
+                                        .OnClick("viewFilterCrachas")
+                                        .Text("")
+                                        .Type(ButtonType.Normal)
+                                        .Icon("fas fa-filter"))
+                                    .Location(ToolbarItemLocation.After).LocateInMenu(ToolbarItemLocateInMenuMode.Auto);
+                                }))
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body p-0">
+                        @(Html.DevExtreme().DataGrid()
+                            .ID("gridCrachas")
+                            .OnRowPrepared("formatRowCrachas")
+                            .OnToolbarPreparing("onToolbarPreparingCrachas")
+                            .OnCellDblClick("editarPedidoCracha")
+                            .DataSource(d => d.Mvc()
+                                .Controller("Crachas")
+                                .LoadAction("GetAllCrachas")
+                                .Key("id")
+                            )
+                            .Columns(c =>
+                            {
+                                c.Add().DataField("id").Caption("ID").AllowEditing(false).DataType(GridColumnDataType.Number);
+                                c.Add().DataField("dataPedido").Caption("Data Pedido").DataType(GridColumnDataType.DateTime).SortOrder(SortOrder.Desc).SortIndex(2);
+                                c.Add().DataField("clienteFkNomeFantasia").Caption("Cliente").DataType(GridColumnDataType.String);
+                                c.Add().DataField("contato").Caption("Contato").DataType(GridColumnDataType.String);
+                                c.Add().DataField("qtdPedida").Caption("Qtd. Pedido").DataType(GridColumnDataType.Number);
+                                c.Add().DataField("tipoCartao").Caption("Tipo do Cartão").DataType(GridColumnDataType.Number)
+                                    .Lookup(lookup => lookup
+                                    .DataSource(Html.GetEnumSelectList<TipoCartaoType>().Select(i => new { Value = int.Parse(i.Value), Text = i.Text }))
+                                    .DisplayExpr("Text")
+                                    .ValueExpr("Value")
+                                );
+                                c.Add().DataField("tipoImpressao").Caption("Impressão").DataType(GridColumnDataType.Number)
+                                    .Lookup(lookup => lookup
+                                    .DataSource(Html.GetEnumSelectList<TipoImpressaoType>().Select(i => new { Value = int.Parse(i.Value), Text = i.Text }))
+                                    .DisplayExpr("Text")
+                                    .ValueExpr("Value")
+                                );
+                                c.Add().DataField("status").Caption("Status").DataType(GridColumnDataType.Number).SortOrder(SortOrder.Asc).SortIndex(1).FilterValue(1)
+                                    .Lookup(lookup => lookup
+                                    .DataSource(Html.GetEnumSelectList<StatusType>().Select(i => new { Value = int.Parse(i.Value), Text = i.Text }))
+                                    .DisplayExpr("Text")
+                                    .ValueExpr("Value")
+                                );
+                                c.Add().DataField("observacaoPedido").Caption("Observações").Visible(false).DataType(GridColumnDataType.String);
+                                c.Add().DataField("qtdImpressa").Caption("Qtd. Impressa").Visible(false).DataType(GridColumnDataType.Number);
+                                c.Add().DataField("dataTermino").Caption("Data Término").Visible(false).DataType(GridColumnDataType.Date);
+                                c.Add().DataField("qtdPerdida").Caption("Qtd. Perdida").Visible(false).DataType(GridColumnDataType.Number);
+                                c.Add().DataField("porcentagemPerdido").Caption("% Perdas").Visible(false).AllowSearch(false).AllowFiltering(false).AllowGrouping(false).AllowSorting(false).DataType(GridColumnDataType.Number);
+                                c.Add().DataField("pendentes").Caption("Pendentes").Visible(false).AllowSearch(true).AllowFiltering(false).AllowGrouping(false).AllowSorting(false).DataType(GridColumnDataType.Number);
+                                c.Add()
+                                .Type(GridCommandColumnType.Buttons)
+                                .Buttons(btns =>
+                                {
+                                    btns.Add()
+                                        .Text("Editar")
+                                        .Icon("fa fa-edit")
+                                        .Hint("Editar")
+                                        .OnClick("editarPedidoCracha");
+                                    btns.Add()
+                                        .Text("Excluir")
+                                        .Icon("fa fa-ban")
+                                        .Hint("Excluir")
+                                        .OnClick("excluirPedidoCracha");
+                                });
+                            })
+                            .Export(e => e.Enabled(true))
+                            .StateStoring(s => s
+                                .Enabled(true)
+                                .Type(StateStoringType.LocalStorage)
+                                .StorageKey("StgGridCrachas")
+                            )
+                            .Summary(s => s.TotalItems(items =>
+                            {
+                                items.Add().Column("id")
+                                    .SummaryType(SummaryType.Count);
+                                items.Add().Column("qtdPedida")
+                                    .SummaryType(SummaryType.Sum);
+
+                            }))
+                        )
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

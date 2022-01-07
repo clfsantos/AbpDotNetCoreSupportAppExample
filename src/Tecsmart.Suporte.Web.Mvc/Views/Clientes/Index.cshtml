@@ -1,0 +1,126 @@
+﻿@using Tecsmart.Suporte.Web.Startup
+@{
+    ViewBag.Title = L("Clientes");
+    ViewBag.CurrentPageName = PageNames.Clientes;
+}
+@section scripts
+{
+    <environment names="Development">
+        <script src="~/view-resources/Views/Clientes/Index.js" asp-append-version="true"></script>
+    </environment>
+
+    <environment names="Staging,Production">
+        <script src="~/view-resources/Views/Clientes/Index.min.js" asp-append-version="true"></script>
+    </environment>
+}
+<section class="content-header">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-sm-6">
+                <h1>@L("Clientes")</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item active">@L("Clientes")</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</section>
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header ctm-p-header">
+                        <div class="row">
+                            <div class="col-md-12">
+                                @(Html.DevExtreme().Toolbar()
+                                .ID("tbClientes")
+                                .Items(items =>
+                                {
+                                    items.Add()
+                                    .Widget(w => w
+                                        .Button()
+                                        .ID("btIntegracaoOmieCompleta")
+                                        .Hint("Integração Omie Completa")
+                                        .OnClick("integracaoOmieCompleta")
+                                        .Text("Integração Completa")
+                                        .Type(ButtonType.Default)
+                                        .Icon("fas fa-sync-alt"))
+                                    .Location(ToolbarItemLocation.Before).LocateInMenu(ToolbarItemLocateInMenuMode.Auto);
+                                    items.Add()
+                                    .Widget(w => w
+                                        .Button()
+                                        .ID("btIntegracaoOmieRapida")
+                                        .Hint("Integração Omie Rápida")
+                                        .OnClick("integracaoOmieRapida")
+                                        .Text("Integração Rápida")
+                                        .Type(ButtonType.Default)
+                                        .Icon("fas fa-sync-alt"))
+                                    .Location(ToolbarItemLocation.Before).LocateInMenu(ToolbarItemLocateInMenuMode.Auto);
+                                    items.Add()
+                                    .Template(@<text>
+                                        @(Html.DevExtreme().LoadIndicator()
+                                            .ID("loadIndicatorContainer")
+                                            .Height(40)
+                                            .Width(40)
+                                            .Visible(false)
+                                        )
+                                    </text>)
+                                    .Location(ToolbarItemLocation.Before).LocateInMenu(ToolbarItemLocateInMenuMode.Auto);
+                                }))
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body p-0">
+                        @(Html.DevExtreme().DataGrid()
+                            .ID("gridClientes")
+                            .OnRowPrepared("formataRowsClientes")
+                            .OnToolbarPreparing("onToolbarPreparingClientes")
+                            .OnCellDblClick("editarCliente")
+                            .DataSource(d => d.Mvc()
+                                .Controller("Clientes")
+                                .LoadAction("GetAllClientes")
+                                .Key("id")
+                            )
+                            .SearchPanel(
+                                sp => sp.Visible(true).Width(300)
+                            )
+                            .Columns(c =>
+                            {
+                                c.Add().DataField("cpfCnpj").Caption("CNPJ / CPF").DataType(GridColumnDataType.String).Format(new JS("formatCNPJ"));
+                                c.Add().DataField("nomeFantasia").Caption("Nome Fantasia").DataType(GridColumnDataType.String);
+                                c.Add().DataField("razaoSocial").Caption("Razão Social").DataType(GridColumnDataType.String);
+                                c.Add().DataField("telefone").Caption("Telefone").DataType(GridColumnDataType.String).Width(100);
+                                c.Add().DataField("isClienteMensalista").Caption("Mensalista").TrueText("Sim").FalseText("Não").DataType(GridColumnDataType.Boolean).Width(100);
+                                c.Add().DataField("isClienteBloqueado").Caption("Bloqueado").TrueText("Sim").FalseText("Não").DataType(GridColumnDataType.Boolean).Width(100);
+                                c.Add()
+                                .Type(GridCommandColumnType.Buttons)
+                                .Buttons(btns =>
+                                {
+                                    btns.Add()
+                                        .Text("Editar")
+                                        .Icon("fa fa-edit")
+                                        .Hint("Editar")
+                                        .OnClick("editarCliente");
+                                });
+                            })
+                            .StateStoring(s => s
+                                .Enabled(true)
+                                .Type(StateStoringType.LocalStorage)
+                                .StorageKey("StgGridClientes")
+                            )
+                            .Summary(s => s.TotalItems(items =>
+                            {
+                                items.Add().Column("cpfCnpj")
+                                    .SummaryType(SummaryType.Count);
+
+                            }))
+                        )
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

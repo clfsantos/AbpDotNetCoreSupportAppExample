@@ -1,0 +1,73 @@
+﻿@using Tecsmart.Suporte.Web.Models.Common.Modals
+@using Tecsmart.Suporte.Web.Models.FilaAtendimentos
+@model CreateOrEditFilaAtendimentoViewModel
+
+@await Html.PartialAsync("~/Views/Shared/Modals/_ModalHeader.cshtml", new ModalHeaderViewModel(Model.IsEditMode ? "Editar" : "Cadastrar"))
+
+<div class="modal-body">
+    <div id="FilaInformationsTab">
+        <form name="FilaInformationsForm" role="form" novalidate class="form-validation">
+            @if (Model.IsEditMode)
+            {
+                <input type="hidden" name="id" value="@Model.FilaAtendimento.Id" />
+                <input type="hidden" name="dataFila" value="@Model.FilaAtendimento.DataFila" />
+                <input type="hidden" name="qtdRetorno" value="@Model.FilaAtendimento.QtdRetorno" />
+                <input type="hidden" name="atendido" value="@Model.FilaAtendimento.Atendido.ToString()" />
+            }
+            @(Html.DevExtreme().Form<CreateOrEditFilaAtendimentoViewModel>()
+            .ID("formFila")
+            .LabelLocation(FormLabelLocation.Top)
+            .Items(items => {
+
+                items.AddSimpleFor(m => m.FilaAtendimento.ClienteId)
+                .Editor(e => e
+                .DropDownBox()
+                .DataSource(d => d.Mvc().Controller("Clientes").LoadAction("GetAllClientes").Key("id"))
+                .ValueExpr("id")
+                .DisplayExpr("nomeFantasia")
+                .Placeholder("Selecione ...")
+                .ContentTemplate(new TemplateName("ClientesDataGridSingle"))
+                .Name("clienteId"));
+
+                items.AddSimpleFor(m => m.FilaAtendimento.Observacao)
+                .Editor(e => e
+                .TextArea()
+                .Name("observacao"));
+
+            }).FormData(Model))
+
+            @using (Html.DevExtreme().NamedTemplate("ClientesDataGridSingle"))
+            {
+                @(Html.DevExtreme().DataGrid()
+                .OnRowPrepared("formataComboClientes")
+                .DataSource(new JS(@"component.getDataSource()"))
+                .SearchPanel(
+                    sp => sp.Visible(true).Width(300)
+                )
+                .Columns(columns => {
+                    columns.Add().DataField("id").Caption("ID").Width("10%");
+                    columns.Add().DataField("nomeFantasia").Caption("Fantasia").Width("30%");
+                    columns.Add().DataField("razaoSocial").Caption("Razão").Width("30%");
+                    columns.Add().DataField("cpfCnpj").Caption("CNPJ/CPF").Width("20%").Format(new JS("formatCNPJ"));
+                    columns.Add().DataField("isClienteMensalista").Caption("Mensalista").TrueText("Sim").FalseText("Não").Width("10%");
+                })
+                .ColumnChooser(ch => ch.Enabled(false))
+                .GroupPanel(gp => gp.Visible(false))
+                .Height(400)
+                .Selection(s => s.Mode(SelectionMode.Single))
+                .SelectedRowKeys(new JS(@"[component.option(""value"")]"))
+                .OnSelectionChanged(@<text>
+                    function(selectedItems) {
+                        var keys = selectedItems.selectedRowKeys;
+                        component.option("value", keys);
+                        if (keys.length > 0) {
+                            component.close();
+                        }
+                    }
+                </text>)
+            )}
+        </form>
+    </div>
+</div>
+
+@await Html.PartialAsync("~/Views/Shared/Modals/_ModalFooterWithSaveAndCancel.cshtml")

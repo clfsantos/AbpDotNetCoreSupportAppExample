@@ -1,0 +1,31 @@
+﻿@using Tecsmart.Suporte.Web.Models.Common.Modals
+@using Tecsmart.Suporte.Web.Models.Equipamentos.Fabricantes
+@model CreateOrEditFabricanteViewModel
+
+@await Html.PartialAsync("~/Views/Shared/Modals/_ModalHeader.cshtml", new ModalHeaderViewModel(Model.IsEditMode ? L("FabricanteEdit") : L("FabricanteCreate")))
+
+<div class="modal-body">
+    <div id="FabricantesInformationsTab">
+        <form name="FabricantesInformationsForm" role="form" novalidate class="form-validation">
+            @if (Model.IsEditMode)
+            {
+                <input type="hidden" name="id" value="@Model.Fabricante.Id" />
+            }
+            @(Html.DevExtreme().Form<CreateOrEditFabricanteViewModel>()
+            .ID("formFabricantes")
+            .LabelLocation(FormLabelLocation.Top)
+            .Items(items => {
+
+                items.AddSimpleFor(m => m.Fabricante.Nome)
+                .Editor(e => e
+                    .TextBox()
+                    .Name("nome")
+                );
+
+            }).FormData(Model))
+
+        </form>
+    </div>
+</div>
+
+@await Html.PartialAsync("~/Views/Shared/Modals/_ModalFooterWithSaveAndCancel.cshtml")

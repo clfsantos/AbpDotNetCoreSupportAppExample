@@ -1,0 +1,177 @@
+﻿@using Tecsmart.Suporte.Web.Models.Common.Modals
+@using Tecsmart.Suporte.Web.Models.Crachas
+@using Tecsmart.Suporte.Crachas.Type
+@model CreateOrEditCrachaViewModel
+
+@await Html.PartialAsync("~/Views/Shared/Modals/_ModalHeader.cshtml", new ModalHeaderViewModel(Model.IsEditMode ? "Editar Pedido de Crachá" : "Novo Pedido de Crachá"))
+
+<div class="modal-body">
+    <div id="CrachaInformationsTab">
+        <form name="CrachaInformationsForm" role="form" novalidate class="form-validation">
+            @if (Model.IsEditMode)
+            {
+                <input type="hidden" name="id" value="@Model.Cracha.Id" />            
+            }
+            @(Html.DevExtreme().Form<CreateOrEditCrachaViewModel>()
+            .ID("formCracha")
+            .LabelLocation(FormLabelLocation.Top)
+            .Items(items => {
+
+                items.AddTabbed()
+                .TabPanelOptions(o =>
+                {
+                    o.ID("tabPanelCrachas");
+                    o.DeferRendering(false);
+                    o.ShowNavButtons(true);
+                })
+                .Tabs(tabItems =>
+                {
+                    tabItems.Add()
+                    .Title("Pedido")
+                    .ColCount(12)
+                    .Items(tabPedido =>
+                    {
+                        tabPedido.AddSimpleFor(m => m.Cracha.DataPedido)
+                        .Editor(e => e
+                            .DateBox()
+                            .Type(DateBoxType.DateTime)
+                            .Value(Model.IsEditMode ? Model.Cracha.DataPedido : DateTime.Now)
+                            .UseMaskBehavior(true)
+                            .Name("dataPedido")
+                        ).ColSpan(12);
+
+                        tabPedido.AddSimpleFor(m => m.Cracha.ClienteId)
+                        .Editor(e => e
+                            .DropDownBox()
+                            .DataSource(d => d.Mvc().Controller("Clientes").LoadAction("GetAllClientes").Key("id"))
+                            .ValueExpr("id")
+                            .DisplayExpr("nomeFantasia")
+                            .Placeholder("Selecione ...")
+                            .ContentTemplate(new TemplateName("ClientesDataGridSingle"))
+                            .Name("clienteId")
+                        ).ColSpan(12);
+
+                        tabPedido.AddSimpleFor(m => m.Cracha.Contato)
+                        .Editor(e => e
+                            .TextBox()
+                            .Name("contato")
+                        ).ColSpan(6);
+
+                        tabPedido.AddSimpleFor(m => m.Cracha.QtdPedida)
+                        .Editor(e => e
+                            .NumberBox()
+                            .ShowSpinButtons(true)
+                            .Name("qtdPedida")
+                        ).ColSpan(6);
+
+                        tabPedido.AddSimpleFor(m => m.Cracha.TipoCartao)
+                        .Editor(e => e
+                            .SelectBox().DataSource(Html.GetEnumSelectList<TipoCartaoType>().Select(i => new { Value = int.Parse(i.Value), Text = i.Text }))
+                            .ValueExpr("Value")
+                            .DisplayExpr("Text")
+                            .Name("tipoCartao")
+                        ).ColSpan(6);
+
+                        tabPedido.AddSimpleFor(m => m.Cracha.TipoImpressao)
+                        .Editor(e => e
+                            .SelectBox().DataSource(Html.GetEnumSelectList<TipoImpressaoType>().Select(i => new { Value = int.Parse(i.Value), Text = i.Text }))
+                            .ValueExpr("Value")
+                            .DisplayExpr("Text")
+                            .Name("tipoImpressao")
+                        ).ColSpan(6);
+
+                        tabPedido.AddSimpleFor(m => m.Cracha.ObservacaoPedido)
+                        .Editor(e => e
+                            .TextArea()
+                            .Name("observacaoPedido")
+                        ).ColSpan(12);
+
+                    });// Fim Tab Pedido
+
+                    tabItems.Add()
+                    .Title("Execução")
+                    .ColCount(12)
+                    .Items(tabExe =>
+                    {
+                        tabExe.AddSimpleFor(m => m.Cracha.Status)
+                        .Editor(e => e
+                            .SelectBox().DataSource(Html.GetEnumSelectList<StatusType>().Select(i => new { Value = int.Parse(i.Value), Text = i.Text }))
+                            .ValueExpr("Value")
+                            .DisplayExpr("Text")
+                            .Name("status")
+                        ).ColSpan(4);
+
+                        tabExe.AddSimpleFor(m => m.Cracha.QtdImpressa)
+                        .Editor(e => e
+                            .NumberBox()
+                            .ShowSpinButtons(true)
+                            .Name("qtdImpressa")
+                        ).ColSpan(4);
+
+                        tabExe.AddSimpleFor(m => m.Cracha.QtdPerdida)
+                        .Editor(e => e
+                            .NumberBox()
+                            .ShowSpinButtons(true)
+                            .Name("qtdPerdida")
+                        ).ColSpan(4);
+
+                        tabExe.AddSimpleFor(m => m.Cracha.Impressora)
+                        .Editor(e => e
+                            .SelectBox().DataSource(Html.GetEnumSelectList<ImpressoraType>().Select(i => new { Value = int.Parse(i.Value), Text = i.Text }))
+                            .ValueExpr("Value")
+                            .DisplayExpr("Text")
+                            .Name("impressora")
+                        ).ColSpan(6);
+
+                        tabExe.AddSimpleFor(m => m.Cracha.DataTermino)
+                        .Editor(e => e
+                            .DateBox()
+                            .Type(DateBoxType.Date)
+                            .UseMaskBehavior(true)
+                            .Name("dataTermino")
+                        ).ColSpan(6);
+
+                        tabExe.AddSimpleFor(m => m.Cracha.ObservacaoExecucao)
+                        .Editor(e => e
+                            .TextArea()
+                            .Name("observacaoExecucao")
+                        ).ColSpan(12);
+
+                    });// Fim Tab Execução
+
+                });// Fim das Tabs
+            }).FormData(Model))
+
+            @using (Html.DevExtreme().NamedTemplate("ClientesDataGridSingle"))
+            {@(Html.DevExtreme().DataGrid()
+                .OnRowPrepared("formataComboClientes")
+                .DataSource(new JS(@"component.getDataSource()"))
+                .SearchPanel(
+                    sp => sp.Visible(true).Width(300)
+                )
+                .Columns(columns => {
+                    columns.Add().DataField("id").Caption("ID").Width("10%");
+                    columns.Add().DataField("nomeFantasia").Caption("Fantasia").Width("30%");
+                    columns.Add().DataField("razaoSocial").Caption("Razão").Width("30%");
+                    columns.Add().DataField("cpfCnpj").Caption("CNPJ/CPF").Width("20%").Format(new JS("formatCNPJ"));
+                })
+                .ColumnChooser(ch => ch.Enabled(false))
+                .GroupPanel(gp => gp.Visible(false))
+                .Height(400)
+                .Selection(s => s.Mode(SelectionMode.Single))
+                .SelectedRowKeys(new JS(@"[component.option(""value"")]"))
+                .OnSelectionChanged(@<text>
+                    function(selectedItems) {
+                        var keys = selectedItems.selectedRowKeys;
+                        component.option("value", keys);
+                        if (keys.length > 0) {
+                            component.close();
+                        }
+                    }
+                </text>)
+            )}
+        </form>
+    </div>
+</div>
+
+@await Html.PartialAsync("~/Views/Shared/Modals/_ModalFooterWithSaveAndCancel.cshtml")

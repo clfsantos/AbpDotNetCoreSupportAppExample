@@ -1,0 +1,42 @@
+﻿@using Tecsmart.Suporte.Web.Views.Shared.Components.CrachasInfo
+@model CrachasInfoViewModel
+
+<div class="row">
+    <div class="col-12 col-sm-6 col-md-3">
+        <div class="info-box">
+            <span class="info-box-icon bg-info elevation-1"><i class="fas fa-shopping-cart"></i></span>
+            <div class="info-box-content">
+                <span class="info-box-text">Total Pedido</span>
+                <span class="info-box-number">@Model.CrachaInfo.TotalPedido</span>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-sm-6 col-md-3">
+        <div class="info-box mb-3">
+            <span class="info-box-icon bg-success elevation-1"><i class="fas fa-thumbs-up"></i></span>
+            <div class="info-box-content">
+                <span class="info-box-text">Total Impresso</span>
+                <span class="info-box-number">@Model.CrachaInfo.TotalImpresso</span>
+            </div>
+        </div>
+    </div>
+    <div class="clearfix hidden-md-up"></div>
+    <div class="col-12 col-sm-6 col-md-3">
+        <div class="info-box mb-3">
+            <span class="info-box-icon bg-warning elevation-1"><i class="fas fa-tasks"></i></span>
+            <div class="info-box-content">
+                <span class="info-box-text">Pendentes</span>
+                <span class="info-box-number">@Model.CrachaInfo.Pendentes</span>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-sm-6 col-md-3">
+        <div class="info-box mb-3">
+            <span class="info-box-icon bg-danger elevation-1"><i class="fas fa-thumbs-down"></i></span>
+            <div class="info-box-content">
+                <span class="info-box-text">Perdas</span>
+                <span class="info-box-number">@Model.CrachaInfo.PorcentagemPerdido <small>% (@Model.CrachaInfo.TotalPerdido) unidades</small></span>
+            </div>
+        </div>
+    </div>
+</div>

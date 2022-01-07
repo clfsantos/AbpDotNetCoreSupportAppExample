@@ -1,0 +1,92 @@
+﻿@using Tecsmart.Suporte.Web.Startup
+@{
+    ViewBag.Title = L("Modelos");
+    ViewBag.CurrentPageName = PageNames.Modelos;
+}
+@section scripts
+{
+    <environment names="Development">
+        <script src="~/view-resources/Views/Modelos/Index.js" asp-append-version="true"></script>
+    </environment>
+
+    <environment names="Staging,Production">
+        <script src="~/view-resources/Views/Modelos/Index.min.js" asp-append-version="true"></script>
+    </environment>
+}
+<section class="content-header">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-sm-6">
+                <h1>@L("Modelos")</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item active">@L("Modelos")</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</section>
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header ctm-p-header">
+                        <div class="row">
+                            <div class="col-md-12">
+                                @(Html.DevExtreme().Toolbar()
+                                .ID("tbModelos")
+                                .Items(items =>
+                                {
+                                    items.Add()
+                                    .Widget(w => w
+                                        .Button()
+                                        .Hint("Novo")
+                                        .OnClick("addModelo")
+                                        .Text("")
+                                        .Type(ButtonType.Default)
+                                        .Icon("add"))
+                                    .Location(ToolbarItemLocation.Before).LocateInMenu(ToolbarItemLocateInMenuMode.Auto);
+                                }))
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body p-0">
+                        @(Html.DevExtreme().DataGrid()
+                            .ID("gridModelos")
+                            .DataSource(d => d.Mvc()
+                                .Controller("Modelos")
+                                .LoadAction("GetAllModelos")
+                                .Key("id")
+                            )
+                            .ColumnChooser(c => c.Enabled(false))
+                            .Columns(c =>
+                            {
+                                c.Add().DataField("id").Caption("ID").DataType(GridColumnDataType.Number).Width(100);
+                                c.Add().DataField("descricao").Caption("Modelo").DataType(GridColumnDataType.String);
+                                c.Add().DataField("categoriaFkDescricao").Caption("Categoria").DataType(GridColumnDataType.String);
+                                c.Add().DataField("fabricanteFkNome").Caption("Fabricante").DataType(GridColumnDataType.String);
+                                c.Add().Caption("Ações")
+                                .Type(GridCommandColumnType.Buttons)
+                                .Buttons(btns =>
+                                {
+                                    btns.Add()
+                                        .Text("Editar")
+                                        .Icon("fa fa-edit")
+                                        .Hint("Editar")
+                                        .OnClick("editModelo");
+                                    btns.Add()
+                                        .Text("Excluir")
+                                        .Icon("fas fa-trash")
+                                        .Hint("Excluir")
+                                        .OnClick("deleteModelo");
+                                });
+                            })
+                        )
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

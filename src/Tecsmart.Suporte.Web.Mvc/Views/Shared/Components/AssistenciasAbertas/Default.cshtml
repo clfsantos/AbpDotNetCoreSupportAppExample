@@ -1,0 +1,42 @@
+﻿@using Tecsmart.Suporte.Web.Views.Shared.Components.AssistenciasAbertas
+@model AssistenciasAbertasViewModel
+
+<div class="card">
+    <div class="card-header ctm-p-header">
+        @(Html.DevExtreme().Toolbar()
+        .ID("tbAssistenciasAbertas")
+        .Items(items =>
+        {
+            items.Add().Html("<h3 class='card-title'> <i class='fas fa-wrench'></i> Assistências em aberto </h3>")
+            .Location(ToolbarItemLocation.Before).LocateInMenu(ToolbarItemLocateInMenuMode.Never);
+
+        }))
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table m-0 table-striped">
+                <thead>
+                    <tr>
+                        <th>Chamado</th>
+                        <th>Data</th>
+                        <th>Cliente</th>
+                        <th>Equipamento</th>
+                        <th>Dias em Manutenção</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model.Assistencias)
+                    {
+                        <tr>
+                            <td><a href="javascript:;">@Html.DisplayFor(modelItem => item.ChamadoId)</a></td>
+                            <td>@Html.DisplayFor(modelItem => item.ChamadoFkDataAbertura)</td>
+                            <td>@Html.DisplayFor(modelItem => item.EquipamentoFkClienteFkNomeFantasia)</td>
+                            <td>@Html.DisplayFor(modelItem => item.EquipamentoFkModeloFkDescricao)</td>
+                            <td>@Html.Raw(DateTime.Now.Subtract(item.ChamadoFkDataAbertura).Days.ToString())</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,128 @@
+﻿@using Tecsmart.Suporte.Web.Models.Common.Modals
+@using Tecsmart.Suporte.Web.Models.Clientes
+@model CreateOrEditClienteViewModel
+
+@await Html.PartialAsync("~/Views/Shared/Modals/_ModalHeader.cshtml", new ModalHeaderViewModel(Model.IsEditMode ? L("ClienteEdit") : L("ClienteCreate")))
+
+<div class="modal-body">
+    <div id="ClientesInformationsTab">
+        <form name="ClientesInformationsForm" role="form" novalidate class="form-validation">
+            @if (Model.IsEditMode)
+            {
+                <input type="hidden" name="id" value="@Model.Cliente.Id" />
+                <input type="hidden" name="numeroERP" value="@Model.Cliente.NumeroERP" />
+                <input type="hidden" name="cidadeId" value="@Model.Cliente.CidadeId" />
+            }
+            @(Html.DevExtreme().Form<CreateOrEditClienteViewModel>()
+            .ID("formClientes")
+            .ColCount(12)
+            .LabelLocation(FormLabelLocation.Top)
+            .Items(items => {
+
+                items.AddSimpleFor(m => m.Cliente.Id)
+                .Editor(e => e
+                .TextBox()
+                .ReadOnly(true)
+                .Name("id")).ColSpan(2);
+
+                items.AddSimpleFor(m => m.Cliente.CpfCnpj)
+                .Editor(e => e
+                .TextBox()
+                .ReadOnly(true)
+                .Name("cpfCnpj")).ColSpan(6);
+
+                items.AddSimpleFor(m => m.Cliente.IsClienteBloqueado)
+                .Editor(e => e
+                .Switch()
+                .SwitchedOffText("NÃO")
+                .SwitchedOnText("SIM")
+                .Name("isClienteBloqueado")).ColSpan(4);
+
+                items.AddSimpleFor(m => m.Cliente.NomeFantasia)
+                .Editor(e => e
+                .TextBox()
+                .ReadOnly(true)
+                .Name("nomeFantasia")).ColSpan(6);
+
+                items.AddSimpleFor(m => m.Cliente.RazaoSocial)
+                .Editor(e => e
+                .TextBox()
+                .ReadOnly(true)
+                .Name("razaoSocial")).ColSpan(6);
+
+                items.AddSimpleFor(m => m.Cliente.Telefone)
+                .Editor(e => e
+                .TextBox()
+                .ReadOnly(true)
+                .Name("telefone")).ColSpan(3);
+
+                items.AddSimpleFor(m => m.Cliente.Email)
+                .Editor(e => e
+                .TextBox()
+                .ReadOnly(true)
+                .Name("email")).ColSpan(3);
+
+                items.AddSimpleFor(m => m.Cliente.CelularRh)
+                .Editor(e => e
+                .TextBox()
+                .Name("celularRh")).ColSpan(3);
+
+                items.AddSimpleFor(m => m.Cliente.EmailRh)
+                .Editor(e => e
+                .TextBox()
+                .Name("emailRh")).ColSpan(3);
+
+                items.AddSimpleFor(m => m.Cliente.EnderecoRua)
+                .Editor(e => e
+                .TextBox()
+                .ReadOnly(true)
+                .Name("enderecoRua")).ColSpan(6);
+
+                items.AddSimpleFor(m => m.Cliente.EnderecoNumero)
+                .Editor(e => e
+                .TextBox()
+                .ReadOnly(true)
+                .Name("enderecoNumero")).ColSpan(3);
+
+                items.AddSimpleFor(m => m.Cliente.Contato)
+                .Editor(e => e
+                .TextBox()
+                .ReadOnly(true)
+                .Name("contato")).ColSpan(3);
+
+                items.AddSimpleFor(m => m.Cliente.EnderecoBairro)
+                .Editor(e => e
+                .TextBox()
+                .ReadOnly(true)
+                .Name("enderecoBairro")).ColSpan(3);
+
+                items.AddSimpleFor(m => m.Cliente.EnderecoComplemento)
+                .Editor(e => e
+                .TextBox()
+                .ReadOnly(true)
+                .Name("enderecoComplemento")).ColSpan(3);
+
+                items.AddSimpleFor(m => m.Cliente.EnderecoCep)
+                .Editor(e => e
+                .TextBox()
+                .ReadOnly(true)
+                .Name("enderecoCep")).ColSpan(3);
+
+                items.AddSimpleFor(m => m.Cliente.CidadeFkNome)
+                .Editor(e => e
+                .TextBox()
+                .ReadOnly(true)
+                ).ColSpan(3);
+
+                items.AddSimpleFor(m => m.Cliente.ClienteObs)
+                .Editor(e => e
+                .TextArea()
+                .Height(300)
+                .Name("ClienteObs")).ColSpan(12);
+
+            }).FormData(Model))
+        </form>
+    </div>
+</div>
+
+@await Html.PartialAsync("~/Views/Shared/Modals/_ModalFooterWithSaveAndCancel.cshtml")

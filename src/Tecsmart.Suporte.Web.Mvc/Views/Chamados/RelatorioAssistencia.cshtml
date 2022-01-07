@@ -1,0 +1,116 @@
+﻿@using Tecsmart.Suporte.Web.Startup
+@using Tecsmart.Suporte.Chamados.Type
+@{
+    ViewBag.Title = L("Assistencias");
+    ViewBag.CurrentPageName = PageNames.Assistencias_Relatorio;
+}
+@section scripts
+{
+    <environment names="Development">
+        <script src="~/view-resources/Views/Chamados/AssistenciasRelatorio.js" asp-append-version="true"></script>
+    </environment>
+
+    <environment names="Staging,Production">
+        <script src="~/view-resources/Views/Chamados/AssistenciasRelatorio.min.js" asp-append-version="true"></script>
+    </environment>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.0.0/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.9/jspdf.plugin.autotable.min.js"></script>
+    <script>
+        window.jsPDF = window.jspdf.jsPDF;
+        applyPlugin(window.jsPDF);
+    </script>
+}
+
+<section class="content-header">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-sm-12">
+                <h1>Consulta de Assistências</h1>
+            </div>
+        </div>
+    </div>
+</section>
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header ctm-p-header">
+                        <div class="row">
+                            <div class="col-md-12">
+                                @(Html.DevExtreme().Toolbar()
+                                .ID("tbAssistenciasRelatorio")
+                                .Items(items =>
+                                {
+                                    items.Add()
+                                    .Widget(w => w
+                                        .Button()
+                                        .OnClick("viewFilterAssistenciasRelatorio")
+                                        .Text("")
+                                        .Type(ButtonType.Normal)
+                                        .Icon("fas fa-filter"))
+                                    .Location(ToolbarItemLocation.After).LocateInMenu(ToolbarItemLocateInMenuMode.Auto);
+                                }))
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body p-0">
+                        @(Html.DevExtreme().DataGrid()
+                            .ID("gridAssistenciasRelatorio")
+                            .DataSource(d => d.Mvc()
+                                .Controller("Chamados")
+                                .LoadAction("GetAllAssistenciaRelatorio")
+                                .Key("id")
+                            )
+                            .OnCellDblClick("editChamadoExterno")
+                            .OnToolbarPreparing("gridAssistenciasToolbar")
+                            .Columns(c =>
+                            {
+                                c.Add().DataField("chamadoId").Caption("Chamado").AllowEditing(false).SortOrder(SortOrder.Desc).DataType(GridColumnDataType.Number);
+                                c.Add().DataField("chamadoFkDataAbertura").Caption("Aberto em").DataType(GridColumnDataType.DateTime);
+                                c.Add().DataField("equipamentoFkDescricao").Caption("Equipamento").DataType(GridColumnDataType.String);
+                                c.Add().DataField("equipamentoFkClienteFkNomeFantasia").Caption("Cliente").DataType(GridColumnDataType.String);
+                                c.Add().DataField("equipamentoFkModeloFkDescricao").Caption("Modelo").DataType(GridColumnDataType.String);
+                                c.Add().DataField("equipamentoFkModeloFKFabricanteFkNome").Caption("Fabricante").DataType(GridColumnDataType.String);
+                                c.Add().DataField("chamadoFkStatus").Caption("Situação").DataType(GridColumnDataType.Number)
+                                    .Lookup(lookup => lookup
+                                    .DataSource(Html.GetEnumSelectList<StatusChamadoType>().Select(i => new { Value = int.Parse(i.Value), Text = i.Text }))
+                                    .DisplayExpr("Text")
+                                    .ValueExpr("Value")
+                                );
+                            })
+                            .Export(e => e.Enabled(true).FileName("RelatorioAssistencias"))
+                            .StateStoring(s => s
+                                .Enabled(true)
+                                .Type(StateStoringType.LocalStorage)
+                                .StorageKey("StgGridAssistenciasRelatorio")
+                            )
+                            .SortByGroupSummaryInfo(i =>
+                            {
+                                i.Add().GroupColumn("equipamentoFkDescricao").SummaryItem("count").SortOrder(SortOrder.Desc);
+                                i.Add().GroupColumn("equipamentoFkClienteFkNomeFantasia").SummaryItem("count").SortOrder(SortOrder.Desc);
+                                i.Add().GroupColumn("equipamentoFkModeloFkDescricao").SummaryItem("count").SortOrder(SortOrder.Desc);
+                                i.Add().GroupColumn("equipamentoFkModeloFKFabricanteFkNome").SummaryItem("count").SortOrder(SortOrder.Desc);
+                            })
+                            .Summary(s => s.TotalItems(items =>
+                            {
+                                items.Add().Column("chamadoId")
+                                    .SummaryType(SummaryType.Count);
+
+                            })
+                            .GroupItems(items =>
+                            {
+                                items.Add().Column("chamadoId")
+                                    .SummaryType(SummaryType.Count)
+                                    .DisplayFormat("{0} Assistências");
+                            })
+                            )
+
+                        )
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

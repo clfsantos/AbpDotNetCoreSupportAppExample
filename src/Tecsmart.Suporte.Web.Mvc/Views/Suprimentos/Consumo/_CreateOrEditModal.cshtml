@@ -1,0 +1,63 @@
+﻿@using Tecsmart.Suporte.Web.Models.Common.Modals
+@using Tecsmart.Suporte.Web.Models.Crachas
+@model CreateOrEditSuprimentoConsumoViewModel
+
+@await Html.PartialAsync("~/Views/Shared/Modals/_ModalHeader.cshtml", new ModalHeaderViewModel(Model.IsEditMode ? L("ConsumoEdit") : L("ConsumoCreate")))
+
+<div class="modal-body">
+    <div id="SuprimentosConsumoInformationsTab">
+        <form name="SuprimentosConsumoInformationsForm" role="form" novalidate class="form-validation">
+            @if (Model.IsEditMode)
+            {
+                <input type="hidden" name="id" value="@Model.SuprimentoConsumo.Id" />
+            }
+            @(Html.DevExtreme().Form<CreateOrEditSuprimentoConsumoViewModel>()
+            .ID("formSuprimentosConsumo")
+            .LabelLocation(FormLabelLocation.Top)
+            .ColCount(12)
+            .Items(items => {
+
+                items.AddSimpleFor(m => m.SuprimentoConsumo.DataCompra)
+                .Editor(e => e
+                    .DateBox()
+                    .Type(DateBoxType.Date)
+                    .UseMaskBehavior(true)
+                    .Name("dataCompra")
+                ).ColSpan(4);
+
+                items.AddSimpleFor(m => m.SuprimentoConsumo.Quantidade)
+                .Editor(e => e
+                    .NumberBox()
+                    .ShowSpinButtons(true)
+                    .Name("quantidade")
+                ).ColSpan(4);
+
+                items.AddSimpleFor(m => m.SuprimentoConsumo.Valor)
+                .Editor(e => e
+                    .NumberBox()
+                    .Format("R$ #,##0.##")
+                    .Name("valor")
+                ).ColSpan(4);
+
+                items.AddSimpleFor(m => m.SuprimentoConsumo.SuprimentoId)
+                .Editor(e => e
+                    .SelectBox()
+                    .DataSource(d => d.Mvc().Controller("Suprimentos").LoadAction("GetAllSuprimentos").Key("id"))
+                    .ValueExpr("id")
+                    .DisplayExpr("descricao")
+                    .Placeholder("Selecione ...")
+                    .Name("suprimentoId")
+                ).ColSpan(12);
+
+                items.AddSimpleFor(m => m.SuprimentoConsumo.Observacoes)
+                .Editor(e => e
+                    .TextArea()
+                    .Name("observacoes")
+                ).ColSpan(12);
+
+            }).FormData(Model))
+        </form>
+    </div>
+</div>
+
+@await Html.PartialAsync("~/Views/Shared/Modals/_ModalFooterWithSaveAndCancel.cshtml")

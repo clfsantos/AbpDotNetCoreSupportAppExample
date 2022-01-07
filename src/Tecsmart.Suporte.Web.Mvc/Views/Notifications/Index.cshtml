@@ -1,0 +1,98 @@
+﻿@using Tecsmart.Suporte.Web.Startup
+@{
+    ViewBag.Title = L("Notifications");
+    ViewBag.CurrentPageName = PageNames.Notifications;
+}
+@section scripts
+{
+    <environment names="Development">
+        <script src="~/view-resources/Views/Notifications/Index.js" asp-append-version="true"></script>
+    </environment>
+
+    <environment names="Staging,Production">
+        <script src="~/view-resources/Views/Notifications/Index.min.js" asp-append-version="true"></script>
+    </environment>
+}
+<section class="content-header">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-sm-6">
+                <h1>@L("Notifications")</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item active">@L("Notifications")</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</section>
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header ctm-p-header">
+                        <div class="row">
+                            <div class="col-md-12">
+                                @(Html.DevExtreme().Toolbar()
+                                .ID("tbNotifications")
+                                .Items(items =>
+                                {
+                                    items.Add()
+                                    .Widget(w => w
+                                        .Button()
+                                        .Hint("Novo")
+                                        .OnClick("addNotification")
+                                        .Text("")
+                                        .Type(ButtonType.Default)
+                                        .Icon("add"))
+                                    .Location(ToolbarItemLocation.Before).LocateInMenu(ToolbarItemLocateInMenuMode.Auto);
+                                }))
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body p-0">
+                        @(Html.DevExtreme().DataGrid()
+                            .ID("gridNotifications")
+                            .OnRowPrepared("formatRows")
+                            .DataSource(d => d.Mvc()
+                                .Controller("Notifications")
+                                .LoadAction("GetAllNotifications")
+                                .Key("userNotificationInfo.id")
+                            )
+                            .ColumnChooser(c => c.Enabled(false))
+                            .WordWrapEnabled(true)
+                            .Columns(c =>
+                            {
+                                c.Add().DataField("userNotificationInfo.creationTime").Caption("Data Notificação").DataType(GridColumnDataType.DateTime).SortOrder(SortOrder.Desc).Width(200);
+                                c.Add().DataField("tenantNotificationInfo.data").Caption("Notificação").DataType(GridColumnDataType.String).CustomizeText("dataMessageTxt");
+                                c.Add().DataField("tenantNotificationInfo.creatorUserId").Caption("Criador").DataType(GridColumnDataType.Number)
+                                    .Lookup(lookup => lookup
+                                        .DataSource(d => d.Mvc().Controller("Users").LoadAction("GetAllUsers").Key("id"))
+                                        .DataSourceOptions(o => o
+                                            .Paginate(true)
+                                            .PageSize(50)
+                                        )
+                                        .DisplayExpr("fullName")
+                                        .ValueExpr("id")
+                                    ).Width(200);
+                                c.Add().Caption("Ações")
+                                .Type(GridCommandColumnType.Buttons)
+                                .Buttons(btns =>
+                                {
+                                    btns.Add()
+                                    .Visible(new JS("checkRead"))
+                                        .Text("")
+                                        .Icon("fas fa-check")
+                                        .Hint("Marcar como lida")
+                                        .OnClick("marcarComoLida");
+                                });
+                            })
+                        )
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

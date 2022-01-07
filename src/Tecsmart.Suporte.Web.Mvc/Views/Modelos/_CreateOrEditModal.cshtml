@@ -1,0 +1,73 @@
+﻿@using Tecsmart.Suporte.Web.Models.Common.Modals
+@using Tecsmart.Suporte.Web.Models.Equipamentos.Modelos
+@model CreateOrEditModeloViewModel
+
+@await Html.PartialAsync("~/Views/Shared/Modals/_ModalHeader.cshtml", new ModalHeaderViewModel(Model.IsEditMode ? L("ModeloEdit") : L("ModeloCreate")))
+
+<div class="modal-body">
+    <div id="ModeloInformationsTab">
+        <form name="ModeloInformationsForm" role="form" novalidate class="form-validation">
+            @if (Model.IsEditMode)
+            {
+                <input type="hidden" name="id" value="@Model.Modelo.Id" />
+            }
+            @(Html.DevExtreme().Form<CreateOrEditModeloViewModel>()
+            .ID("formModelo")
+            .LabelLocation(FormLabelLocation.Top)
+            .Items(items => {
+
+                items.AddSimpleFor(m => m.Modelo.Descricao)
+                .Editor(e => e
+                    .TextBox()
+                    .Name("descricao")
+                );
+
+                items.AddSimpleFor(m => m.Modelo.FabricanteId)
+                .Editor(e => e
+                        .SelectBox()
+                        .DataSource(d => d.Mvc().Controller("Fabricantes").LoadAction("GetAllFabricantes").Key("id"))
+                        .DisplayExpr("nome")
+                        .ValueExpr("id")
+                        .ID("modeloFabricanteId")
+                        .Name("fabricanteId")
+                        .SearchEnabled(true)
+                        .Buttons(buttons =>
+                        {
+                            buttons.Add()
+                            .Name("addFabricante")
+                            .Location(TextEditorButtonLocation.After)
+                            .Widget(w => w.Button()
+                            .Type(ButtonType.Default)
+                            .Icon("fas fa-plus")
+                            .OnClick("cadastrarFabricanteExterno"));
+                        })
+                );
+
+                items.AddSimpleFor(m => m.Modelo.CategoriaId)
+                .Editor(e => e
+                        .SelectBox()
+                        .DataSource(d => d.Mvc().Controller("Categorias").LoadAction("GetAllCategorias").Key("id"))
+                        .DisplayExpr("descricao")
+                        .ValueExpr("id")
+                        .ID("modeloCategoriaId")
+                        .Name("categoriaId")
+                        .SearchEnabled(true)
+                        .Buttons(buttons =>
+                        {
+                            buttons.Add()
+                            .Name("addCategoria")
+                            .Location(TextEditorButtonLocation.After)
+                            .Widget(w => w.Button()
+                            .Type(ButtonType.Default)
+                            .Icon("fas fa-plus")
+                            .OnClick("cadastrarCategoriaExterno"));
+                        })
+                );
+
+            }).FormData(Model))
+
+        </form>
+    </div>
+</div>
+
+@await Html.PartialAsync("~/Views/Shared/Modals/_ModalFooterWithSaveAndCancel.cshtml")

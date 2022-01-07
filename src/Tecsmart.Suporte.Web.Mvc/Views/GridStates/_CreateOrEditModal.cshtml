@@ -1,0 +1,31 @@
+﻿@using Tecsmart.Suporte.Web.Models.Common.Modals
+@using Tecsmart.Suporte.Web.Models.GridStates
+@model CreateOrEditGridStateViewModel
+
+@await Html.PartialAsync("~/Views/Shared/Modals/_ModalHeader.cshtml", new ModalHeaderViewModel(Model.IsEditMode ? L("FiltroEdit") : L("FiltroCreate")))
+
+<div class="modal-body">
+    <div id="GridStateInformationsTab">
+        <form name="GridStateInformationsForm" role="form" novalidate class="form-validation">
+            @if (Model.IsEditMode)
+            {
+                <input type="hidden" name="id" value="@Model.GridState.Id" />
+            }
+            <input type="hidden" name="tela" value="@Model.GridState.Tela" />
+            <input type="hidden" name="state" value="@Model.GridState.State" />
+            @(Html.DevExtreme().Form<CreateOrEditGridStateViewModel>()
+            .ID("formGridState")
+            .LabelLocation(FormLabelLocation.Top)
+            .Items(items => {
+
+                items.AddSimpleFor(m => m.GridState.Descricao)
+                .Editor(e => e
+                .TextBox()
+                .Name("descricao"));
+
+            }).FormData(Model))
+        </form>
+    </div>
+</div>
+
+@await Html.PartialAsync("~/Views/Shared/Modals/_ModalFooterWithSaveAndCancel.cshtml")

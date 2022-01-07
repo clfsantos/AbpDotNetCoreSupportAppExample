@@ -1,0 +1,31 @@
+﻿@using Tecsmart.Suporte.Web.Models.Common.Modals
+@using Tecsmart.Suporte.Web.Models.Chamados
+@model CreateOrEditEtapaChamadoViewModel
+
+@await Html.PartialAsync("~/Views/Shared/Modals/_ModalHeader.cshtml", new ModalHeaderViewModel("Recusar Etapa de Implantação"))
+
+<div class="modal-body">
+    <div id="ImplantacaoInformationsTab">
+        <form name="ImplantacaoInformationsForm" role="form" novalidate class="form-validation">
+            @if (Model.IsEditMode)
+            {
+                <input type="hidden" name="id" value="@Model.EtapaChamado.Id" />
+            }
+            <input type="hidden" name="chamadoId" value="@Model.EtapaChamado.ChamadoId" />
+            @(Html.DevExtreme().Form<CreateOrEditEtapaChamadoViewModel>()
+            .ID("formImplantacao")
+            .LabelLocation(FormLabelLocation.Top)
+            .Items(items => {
+
+                items.AddSimpleFor(t => t.EtapaChamado.ObsRecusada)
+                .Editor(e => e
+                .TextArea()
+                .Height("200px")
+                .Name("obsRecusada"));
+
+            }).FormData(Model))
+        </form>
+    </div>
+</div>
+
+@await Html.PartialAsync("~/Views/Shared/Modals/_ModalFooterWithSaveAndCancel.cshtml")

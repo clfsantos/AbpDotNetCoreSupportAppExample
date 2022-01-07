@@ -1,0 +1,43 @@
+﻿@using Tecsmart.Suporte.Web.Models.Common.Modals
+@using Tecsmart.Suporte.Web.Models.FilaAtendimentos
+@using Tecsmart.Suporte.FilaAtendimentos.Type
+@model CreateOrEditFilaRetornoViewModel
+
+@await Html.PartialAsync("~/Views/Shared/Modals/_ModalHeader.cshtml", new ModalHeaderViewModel(Model.IsEditMode ? "Editar" : "Cadastrar"))
+
+<div class="modal-body">
+    <div id="FilaRetornoInformationsTab">
+        <form name="FilaRetornoInformationsForm" role="form" novalidate class="form-validation">
+            @if (Model.IsEditMode)
+            {
+                <input type="hidden" name="id" value="@Model.FilaRetorno.Id" />
+                <input type="hidden" name="dataRetorno" value="@Model.FilaRetorno.DataRetorno" />            
+            }
+
+            <input type="hidden" name="filaAtendimentoId" value="@Model.FilaRetorno.FilaAtendimentoId" />
+            
+            @(Html.DevExtreme().Form<CreateOrEditFilaRetornoViewModel>()
+            .ID("formFilaRetorno")
+            .LabelLocation(FormLabelLocation.Top)
+            .Items(items => {
+
+                items.AddSimpleFor(m => m.FilaRetorno.TipoRetorno)
+                .Editor(e => e
+                    .SelectBox().DataSource(Html.GetEnumSelectList<TipoRetornoType>().Select(i => new { Value = int.Parse(i.Value), Text = i.Text }))
+                    .ValueExpr("Value")
+                    .DisplayExpr("Text")
+                    .Name("tipoRetorno")
+                );
+
+                items.AddSimpleFor(m => m.FilaRetorno.Observacao)
+                .Editor(e => e
+                .TextArea()
+                .Name("observacao"));
+
+            }).FormData(Model))
+
+        </form>
+    </div>
+</div>
+
+@await Html.PartialAsync("~/Views/Shared/Modals/_ModalFooterWithSaveAndCancel.cshtml")

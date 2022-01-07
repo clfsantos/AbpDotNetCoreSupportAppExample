@@ -1,0 +1,90 @@
+﻿@using Tecsmart.Suporte.Web.Startup
+@{
+    ViewBag.Title = L("SubGrupos");
+    ViewBag.CurrentPageName = PageNames.SubGrupos;
+}
+@section scripts
+{
+    <environment names="Development">
+        <script src="~/view-resources/Views/SubGrupos/Index.js" asp-append-version="true"></script>
+    </environment>
+
+    <environment names="Staging,Production">
+        <script src="~/view-resources/Views/SubGrupos/Index.min.js" asp-append-version="true"></script>
+    </environment>
+}
+<section class="content-header">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-sm-6">
+                <h1>@L("SubGrupos")</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item active">@L("SubGrupos")</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</section>
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header ctm-p-header">
+                        <div class="row">
+                            <div class="col-md-12">
+                                @(Html.DevExtreme().Toolbar()
+                                .ID("tbSubGrupos")
+                                .Items(items =>
+                                {
+                                    items.Add()
+                                    .Widget(w => w
+                                        .Button()
+                                        .Hint("Novo")
+                                        .OnClick("addSubGrupo")
+                                        .Text("")
+                                        .Type(ButtonType.Default)
+                                        .Icon("add"))
+                                    .Location(ToolbarItemLocation.Before).LocateInMenu(ToolbarItemLocateInMenuMode.Auto);
+                                }))
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body p-0">
+                        @(Html.DevExtreme().DataGrid()
+                            .ID("gridSubGrupos")
+                            .DataSource(d => d.Mvc()
+                                .Controller("SubGrupos")
+                                .LoadAction("GetAllSubGrupos")
+                                .Key("id")
+                            )
+                            .ColumnChooser(c => c.Enabled(false))
+                            .Columns(c =>
+                            {
+                                c.Add().DataField("id").Caption("ID").DataType(GridColumnDataType.Number).Width(100);
+                                c.Add().DataField("descricao").Caption("Descrição").DataType(GridColumnDataType.String);
+                                c.Add().Caption("Ações")
+                                .Type(GridCommandColumnType.Buttons)
+                                .Buttons(btns =>
+                                {
+                                    btns.Add()
+                                        .Text("Editar")
+                                        .Icon("fa fa-edit")
+                                        .Hint("Editar")
+                                        .OnClick("editSubGrupo");
+                                    btns.Add()
+                                        .Text("Excluir")
+                                        .Icon("fas fa-trash")
+                                        .Hint("Excluir")
+                                        .OnClick("deleteSubGrupo");
+                                });
+                            })
+                        )
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

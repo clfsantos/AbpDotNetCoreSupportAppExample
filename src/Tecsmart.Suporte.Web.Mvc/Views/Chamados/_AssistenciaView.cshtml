@@ -1,0 +1,59 @@
+﻿@using Tecsmart.Suporte.Web.Models.Chamados
+@model CreateOrEditChamadoViewModel
+@{ 
+    if (@Model.Assistencia != null)
+    { 
+        @(Html.DevExtreme().Toolbar()
+        .ID(@Guid.NewGuid().ToString())
+        .Items(items =>
+        {
+            items.Add()
+            .Widget(w => w
+            .Button()
+            .Icon("fas fa-edit")
+            .Text("Editar")
+            .Type(ButtonType.Default)
+            .OnClick("editAssistencia")
+            )
+            .Location(ToolbarItemLocation.Before);
+        }))
+        <input type="hidden" name="assistencia_id" value="@Model.Assistencia.Id" />
+        <table class="table table-striped" style="margin-top:10px;">
+            <tbody>
+                <tr>
+                    <td style="width:15%;"><b>Cliente</b></td>
+                    <td>@Html.DisplayFor(m => m.Assistencia.EquipamentoFkClienteFkNomeFantasia)</td>
+                </tr>
+                <tr>
+                    <td style="width:15%;"><b>Equipamento</b></td>
+                    <td>@Html.DisplayFor(m => m.Assistencia.EquipamentoFkModeloFKFabricanteFkNome) - @Html.DisplayFor(m => m.Assistencia.EquipamentoFkModeloFkDescricao) - @Html.DisplayFor(m => m.Assistencia.EquipamentoFkDescricao)</td>
+                </tr>
+                <tr>
+                    <td style="width:15%;"><b>Categoria do Problema</b></td>
+                    <td>@Html.DisplayFor(m => m.Assistencia.CategoriaProblemaFkDescricao)</td>
+                </tr>
+                <tr>
+                    <td style="width:15%;"><b>Dados Adicionais</b></td>
+                    <td><textarea class='form-control' rows='10' disabled='disabled'>@Html.DisplayFor(m => m.Assistencia.DadosAdicionais)</textarea></td>
+                </tr>
+            </tbody>
+        </table> 
+    }
+    else
+    { 
+        @(Html.DevExtreme().Toolbar()
+        .ID(@Guid.NewGuid().ToString())
+        .Items(items =>
+        {
+            items.Add()
+            .Widget(w => w
+            .Button()
+            .Icon("fas fa-plus")
+            .Text("Adicionar")
+            .Type(ButtonType.Default)
+            .OnClick("addAssistencia")
+            )
+            .Location(ToolbarItemLocation.Before);
+        })) 
+    } 
+}

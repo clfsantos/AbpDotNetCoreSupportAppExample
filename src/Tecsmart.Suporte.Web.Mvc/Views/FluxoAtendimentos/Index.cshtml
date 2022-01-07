@@ -1,0 +1,89 @@
+﻿@using Tecsmart.Suporte.Web.Startup
+
+@{
+    ViewBag.Title = L("Clientes");
+    ViewBag.CurrentPageName = PageNames.FluxoAtendimentos;
+}
+@section scripts
+{
+    <script>
+        $(function () {
+            carregaPrioridade();
+            setInterval(carregaPrioridade, 5000);
+        });
+
+        function carregaPrioridade() {
+            $.ajax({
+                type: "POST",
+                url: '@Url.Action("ReloadFluxo", "FluxoAtendimentos")',
+                dataType: 'html',
+            }).done(function (retorno) {
+                $('#container-prioridade').html(retorno);
+                gridFluxoGetInstance().refresh();
+            });
+        }
+    </script>
+
+    <environment names="Development">
+        <script src="~/view-resources/Views/FluxoAtendimentos/Index.js" asp-append-version="true"></script>
+    </environment>
+
+    <environment names="Staging,Production">
+        <script src="~/view-resources/Views/FluxoAtendimentos/Index.min.js" asp-append-version="true"></script>
+    </environment>
+}
+<section class="content-header">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-sm-6">
+                <h1>@L("Clientes")</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item active">@L("Clientes")</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</section>
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header ctm-p-header">
+                        <div class="row">
+                            <div class="col-md-12">
+                                @*@await Component.InvokeAsync(typeof(FluxoAtendimentoViewComponent))*@
+                                <div id="container-prioridade"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body p-0">
+
+                        @(Html.DevExtreme().DataGrid()
+                            .ID("gridFluxo")
+                            .OnToolbarPreparing("onToolbarFluxoPreparing")
+                            .DataSource(d => d.Mvc()
+                                .Controller("FluxoAtendimentos")
+                                .LoadAction("GetAllFluxos")
+                                .Key("id")
+                            )
+                            .AllowColumnReordering(false)
+                            .GroupPanel(g => g.Visible(false))
+                            .ColumnChooser(c => c.Enabled(false))
+                            .Columns(c =>
+                            {
+                                c.Add().DataField("dataFluxo").Caption("Data").SortOrder(SortOrder.Desc).DataType(GridColumnDataType.Date).FilterValue(DateTime.Now).Width(150);
+                                c.Add().DataField("dataFluxo").Caption("Hora").SortOrder(SortOrder.Desc).DataType(GridColumnDataType.DateTime).Format("HH:mm").Width(100);
+                                c.Add().DataField("clienteFkNomeFantasia").Caption("Cliente").DataType(GridColumnDataType.String);
+                                c.Add().DataField("usuarioFkName").Caption("Usuário").DataType(GridColumnDataType.String);
+                            })
+                        )
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

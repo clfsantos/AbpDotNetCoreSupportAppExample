@@ -1,0 +1,131 @@
+﻿@using Tecsmart.Suporte.Web.Startup
+@using Tecsmart.Suporte.Chamados.Type
+@{
+    ViewBag.Title = L("Chamados");
+    ViewBag.CurrentPageName = PageNames.Chamados_Relatorio;
+}
+@section scripts
+{
+    <environment names="Development">
+        <script src="~/view-resources/Views/Chamados/ChamadosRelatorio.js" asp-append-version="true"></script>
+    </environment>
+
+    <environment names="Staging,Production">
+        <script src="~/view-resources/Views/Chamados/ChamadosRelatorio.min.js" asp-append-version="true"></script>
+    </environment>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.0.0/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.9/jspdf.plugin.autotable.min.js"></script>
+    <script>
+        window.jsPDF = window.jspdf.jsPDF;
+        applyPlugin(window.jsPDF);
+    </script>
+}
+
+<section class="content-header">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-sm-12">
+                <h1>Relatório de Chamados</h1>
+            </div>
+        </div>
+    </div>
+</section>
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header ctm-p-header">
+                        <div class="row">
+                            <div class="col-md-12">
+                                @(Html.DevExtreme().Toolbar()
+                                .ID("tbChamadosRelatorio")
+                                .Items(items =>
+                                {
+                                    items.Add()
+                                    .Widget(w => w
+                                        .Button()
+                                        .OnClick("viewFilterChamadosRelatorio")
+                                        .Text("")
+                                        .Type(ButtonType.Normal)
+                                        .Icon("fas fa-filter"))
+                                    .Location(ToolbarItemLocation.After).LocateInMenu(ToolbarItemLocateInMenuMode.Auto);
+                                }))
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body p-0">
+                        @(Html.DevExtreme().DataGrid()
+                            .ID("gridChamadosRelatorio")
+                            .DataSource(d => d.Mvc()
+                                .Controller("Chamados")
+                                .LoadAction("GetAllChamadosRelatorio")
+                                .Key("id")
+                            )
+                            .OnCellDblClick("editChamadoExterno")
+                            .OnToolbarPreparing("gridChamadosToolbar")
+                            .OnRowPrepared("formatRow")
+                            .Columns(c =>
+                            {
+                                c.Add().DataField("id").Caption("ID").AllowEditing(false).SortOrder(SortOrder.Desc).DataType(GridColumnDataType.Number);
+                                c.Add().DataField("dataAbertura").Caption("Aberto em").DataType(GridColumnDataType.DateTime);
+                                c.Add().DataField("ocorrencia").Caption("Ocorrência").DataType(GridColumnDataType.String).Width(400);
+                                c.Add().DataField("clienteFkNomeFantasia").Caption("Cliente").DataType(GridColumnDataType.String).Width(300);
+                                c.Add().DataField("contato").Caption("Contato").DataType(GridColumnDataType.String);
+                                c.Add().DataField("produtoFkDescricao").Caption("Produto").DataType(GridColumnDataType.String);
+                                c.Add().DataField("grupoFkDescricao").Caption("Grupo").DataType(GridColumnDataType.String);
+                                c.Add().DataField("subGrupoFkDescricao").Caption("SubGrupo").DataType(GridColumnDataType.String);
+                                c.Add().DataField("origemFkDescricao").Caption("Origem").DataType(GridColumnDataType.String);
+                                c.Add().DataField("classificacaoFkDescricao").Caption("Classificação").DataType(GridColumnDataType.String);
+                                c.Add().DataField("responsavelFkName").Caption("Aberto por").DataType(GridColumnDataType.String);
+                                c.Add().DataField("responsavelAtualFkName").Caption("Responsável").DataType(GridColumnDataType.String);
+                                c.Add().DataField("responsavelFechamentoFkName").Caption("Fechado por").DataType(GridColumnDataType.String);
+                                c.Add().DataField("dataEncerramento").Caption("Encerrado em").DataType(GridColumnDataType.Date);
+                                c.Add().DataField("parecerFinal").Caption("Parecer Final").DataType(GridColumnDataType.String).Width(400);
+                                c.Add().DataField("releaseFkVersao").Caption("Release").DataType(GridColumnDataType.String);
+                                c.Add().DataField("gerouFinanceiro").Caption("Financeiro").DataType(GridColumnDataType.Boolean).FalseText("NÃO").TrueText("SIM").Visible(false);
+                                c.Add().DataField("OsRelacionada").Caption("O.S. Relacionada").DataType(GridColumnDataType.Number);
+                                c.Add().DataField("status").Caption("Situação").DataType(GridColumnDataType.Number)
+                                    .Lookup(lookup => lookup
+                                    .DataSource(Html.GetEnumSelectList<StatusChamadoType>().Select(i => new { Value = int.Parse(i.Value), Text = i.Text }))
+                                    .DisplayExpr("Text")
+                                    .ValueExpr("Value")
+                                );
+                            })
+                            .Export(e => e.Enabled(true).FileName("RelatorioChamados"))
+                            .StateStoring(s => s
+                                .Enabled(true)
+                                .Type(StateStoringType.LocalStorage)
+                                .StorageKey("StgGridChamadosRelatorio")
+                            )
+                            .SortByGroupSummaryInfo(i =>
+                            {
+                                i.Add().GroupColumn("produtoFkDescricao").SummaryItem("count").SortOrder(SortOrder.Desc);
+                                i.Add().GroupColumn("grupoFkDescricao").SummaryItem("count").SortOrder(SortOrder.Desc);
+                                i.Add().GroupColumn("subGrupoFkDescricao").SummaryItem("count").SortOrder(SortOrder.Desc);
+                                i.Add().GroupColumn("origemFkDescricao").SummaryItem("count").SortOrder(SortOrder.Desc);
+                                i.Add().GroupColumn("classificacaoFkDescricao").SummaryItem("count").SortOrder(SortOrder.Desc);
+                                i.Add().GroupColumn("clienteFkNomeFantasia").SummaryItem("count").SortOrder(SortOrder.Desc);
+                            })
+                            .Summary(s => s.TotalItems(items =>
+                            {
+                                items.Add().Column("id")
+                                    .SummaryType(SummaryType.Count);
+
+                            })
+                            .GroupItems(items =>
+                            {
+                                items.Add().Column("id")
+                                    .SummaryType(SummaryType.Count)
+                                    .DisplayFormat("{0} Chamados");
+                            })
+                            )
+
+                        )
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

@@ -1,0 +1,41 @@
+﻿@using Tecsmart.Suporte.Web.Models.Common.Modals
+@using Tecsmart.Suporte.Web.Models.Produtos
+@model CreateOrEditGrupoViewModel
+
+@await Html.PartialAsync("~/Views/Shared/Modals/_ModalHeader.cshtml", new ModalHeaderViewModel(Model.IsEditMode ? L("GrupoEdit") : L("GrupoCreate")))
+
+<div class="modal-body">
+    <div id="GruposInformationsTab">
+        <form name="GruposInformationsForm" role="form" novalidate class="form-validation">
+            @if (Model.IsEditMode)
+            {
+                <input type="hidden" name="id" value="@Model.Grupo.Id" />
+            }
+            @(Html.DevExtreme().Form<CreateOrEditGrupoViewModel>()
+            .ID("formGrupos")
+            .LabelLocation(FormLabelLocation.Top)
+            .Items(items => {
+
+                items.AddSimpleFor(m => m.Grupo.Descricao)
+                .Editor(e => e
+                    .TextBox()
+                    .Name("descricao")
+                );
+
+                items.AddSimpleFor(m => m.Produtos)
+                .Editor(e => e
+                    .TagBox()
+                    .DataSource(d => d.Mvc().Controller("Produtos").LoadAction("GetAllProdutos").Key("id"))
+                    .DisplayExpr("descricao")
+                    .ValueExpr("id")
+                    .Name("produtos")
+                    .ID("tagBoxProdutos")
+                    .SearchEnabled(true)
+                );
+
+            }).FormData(Model))
+        </form>
+    </div>
+</div>
+
+@await Html.PartialAsync("~/Views/Shared/Modals/_ModalFooterWithSaveAndCancel.cshtml")

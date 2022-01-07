@@ -1,0 +1,43 @@
+﻿@using Tecsmart.Suporte.Web.Models.Common.Modals
+@using Tecsmart.Suporte.Web.Models.Notifications
+@model CreateNotificationViewModel
+
+@await Html.PartialAsync("~/Views/Shared/Modals/_ModalHeader.cshtml", new ModalHeaderViewModel("Criar nova notificação"))
+
+<div class="modal-body">
+    <div id="NotificationInformationsTab">
+        <form name="NotificationInformationsForm" role="form" novalidate class="form-validation">
+            @(Html.DevExtreme().Form<CreateNotificationViewModel>()
+            .ID("formNotification")
+            .LabelLocation(FormLabelLocation.Top)
+            .Items(items => {
+                
+                items.AddSimpleFor(m => m.Notification.EnviarTodosUsuarios)
+                .Editor(e => e
+                    .Switch()
+                    .SwitchedOnText("Sim")
+                    .SwitchedOffText("Não")
+                    .Name("enviarTodosUsuarios")
+                );
+
+                items.AddSimpleFor(m => m.Notification.UsuarioId)
+                .Editor(e => e
+                    .SelectBox()
+                    .DataSource(d => d.Mvc().Controller("Users").LoadAction("GetAllUsers").Key("id"))
+                    .DisplayExpr("fullName")
+                    .ValueExpr("id")
+                    .Name("usuarioId")
+                );
+
+                items.AddSimpleFor(m => m.Notification.Notificacao)
+                .Editor(e => e
+                    .TextArea()
+                    .Name("notificacao")
+                );
+
+            }).FormData(Model))
+        </form>
+    </div>
+</div>
+
+@await Html.PartialAsync("~/Views/Shared/Modals/_ModalFooterWithSaveAndCancel.cshtml")

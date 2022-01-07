@@ -1,0 +1,82 @@
+﻿@using Tecsmart.Suporte.Web.Models.Common.Modals
+@using Tecsmart.Suporte.Web.Models.Chamados
+@model CreateOrEditAssistenciaViewModel
+
+@await Html.PartialAsync("~/Views/Shared/Modals/_ModalHeader.cshtml", new ModalHeaderViewModel(Model.IsEditMode ? "Editar Manutenção" : "Cadastrar Manutenção"))
+
+<div class="modal-body">
+    <div id="AssistenciaInformationsTab">
+        <form name="AssistenciaInformationsForm" role="form" novalidate class="form-validation">
+            @if (Model.IsEditMode)
+            {
+                <input type="hidden" name="id" value="@Model.Assistencia.Id" />
+            }
+            <input type="hidden" name="chamadoId" value="@Model.Assistencia.ChamadoId" />
+            @(Html.DevExtreme().Form<CreateOrEditAssistenciaViewModel>()
+            .ID("formAssistencia")
+            .LabelLocation(FormLabelLocation.Top)
+            .Items(items => {
+
+                items.AddSimpleFor(c => c.Assistencia.EquipamentoId)
+                    .Editor(e => e
+                    .DropDownBox()
+                    .DataSource(d => d.Mvc().Controller("Equipamentos").LoadAction("GetAllEquipamentos").Key("id"))
+                    .ValueExpr("id")
+                    .DisplayExpr("descricao")
+                    .Placeholder("Selecione ...")
+                    .ContentTemplate(new TemplateName("EquipamentosDataGridSingle"))
+                    .Name("equipamentoId")
+                );
+
+                items.AddSimpleFor(f => f.Assistencia.CategoriaId)
+                .Editor(e => e
+                    .SelectBox()
+                    .DataSource(d => d.Mvc().Controller("CategoriasProblemas").LoadAction("GetAllCategoriasProblemas").Key("id"))
+                    .DisplayExpr("descricao")
+                    .ValueExpr("id")
+                    .SearchEnabled(true)
+                    .Name("categoriaId")
+                );
+
+                items.AddSimpleFor(t => t.Assistencia.DadosAdicionais)
+                .Editor(e => e
+                    .TextArea()
+                    .Height("400px")
+                    .Name("dadosAdicionais")
+                );
+
+            }).FormData(Model))
+        </form>
+    </div>
+</div>
+
+@await Html.PartialAsync("~/Views/Shared/Modals/_ModalFooterWithSaveAndCancel.cshtml")
+
+@using (Html.DevExtreme().NamedTemplate("EquipamentosDataGridSingle"))
+{
+    @(Html.DevExtreme().DataGrid()
+        .DataSource(new JS(@"component.getDataSource()"))
+        .SearchPanel(
+            sp => sp.Visible(true).Width(300)
+        )
+        .Columns(c => {
+            c.Add().DataField("descricao").Caption("Número de série").DataType(GridColumnDataType.String);
+            c.Add().DataField("clienteFkNomeFantasia").Caption("Cliente").DataType(GridColumnDataType.String);
+            c.Add().DataField("modeloFkDescricao").Caption("Modelo").DataType(GridColumnDataType.String);
+        })
+        .ColumnChooser(ch => ch.Enabled(false))
+        .GroupPanel(gp => gp.Visible(false))
+        .Height(400)
+        .Selection(s => s.Mode(SelectionMode.Single))
+        .SelectedRowKeys(new JS(@"[component.option(""value"")]"))
+        .OnSelectionChanged(@<text>
+            function(selectedItems) {
+                var keys = selectedItems.selectedRowKeys;
+                component.option("value", keys);
+                if (keys.length > 0) {
+                    component.close();
+                }
+            }
+        </text>)
+    )
+}

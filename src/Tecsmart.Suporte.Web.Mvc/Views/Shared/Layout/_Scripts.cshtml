@@ -1,0 +1,143 @@
+﻿@using System.Globalization
+@inject Tecsmart.Suporte.Timing.AppTimes AppTimes
+
+<script type="text/javascript">
+        // This is used to get the application's root path from javascript.
+        // It's useful if you're running application in a virtual directory under IIS.
+        var abp = abp || {};
+        abp.appPath = '@ApplicationPath';
+</script>
+
+<environment names="Development">
+
+    @*admin-lte scripts start*@
+    <script src="~/libs/bootstrap/dist/js/bootstrap.bundle.js" asp-append-version="true"></script>
+    <script src="~/libs/datatables/js/jquery.dataTables.min.js" asp-append-version="true"></script>
+    <script src="~/libs/datatables/js/dataTables.bootstrap4.min.js" asp-append-version="true"></script>
+    <script src="~/libs/datatables/js/dataTables.responsive.min.js" asp-append-version="true"></script>
+    <script src="~/libs/datatables/js/responsive.bootstrap4.min.js" asp-append-version="true"></script>
+    <script src="~/libs/datatables/js/dataTables.buttons.js" asp-append-version="true"></script>
+    <script src="~/libs/datatables/js/buttons.bootstrap4.js" asp-append-version="true"></script>
+    <script src="~/libs/admin-lte/dist/js/adminlte.js" asp-append-version="true"></script>
+    @*admin-lte scripts end*@
+
+    @*abp scripts start*@
+    <script src="~/libs/block-ui/jquery.blockUI.js" asp-append-version="true"></script>
+    <script src="~/libs/spin/spin.js" asp-append-version="true"></script>
+    <script src="~/libs-ext/spin/jquery.spin.js" asp-append-version="true"></script>
+    <script src="~/libs/sweetalert/sweetalert.min.js" asp-append-version="true"></script>
+    <script src="~/libs/toastr/toastr.min.js" asp-append-version="true"></script>
+    <script src="~/libs/moment/moment-with-locales.js" asp-append-version="true"></script>
+    <script src="~/libs/signalr/dist/browser/signalr.js" asp-append-version="true"></script>
+    <script src="~/libs/abp-web-resources/Abp/Framework/scripts/abp.js" asp-append-version="true"></script>
+    <script src="~/libs/abp-web-resources/Abp/Framework/scripts/libs/abp.jquery.js" asp-append-version="true"></script>
+    <script src="~/libs/abp-web-resources/Abp/Framework/scripts/libs/abp.toastr.js" asp-append-version="true"></script>
+    <script src="~/libs/abp-web-resources/Abp/Framework/scripts/libs/abp.blockUI.js" asp-append-version="true"></script>
+    <script src="~/libs/abp-web-resources/Abp/Framework/scripts/libs/abp.spin.js" asp-append-version="true"></script>
+    <script src="~/libs/abp-web-resources/Abp/Framework/scripts/libs/abp.sweet-alert.js" asp-append-version="true"></script>
+    <script src="~/libs/abp-web-resources/Abp/Framework/scripts/libs/abp.signalr-client.js" asp-append-version="true"></script>
+    @*abp scripts end*@
+
+    @*other scripts start*@
+    <script src="~/libs/jquery-validate/jquery.validate.js" asp-append-version="true"></script>
+    <script src="~/libs/jquery-validate/jquery.validate.unobtrusive.js" asp-append-version="true"></script>
+    <script src="~/libs/push.js/push.js" asp-append-version="true"></script>
+    <script src="~/libs/jquery-inputmask/jquery.inputmask.js" asp-append-version="true"></script>
+    @*other scripts end*@
+
+    @*custom scripts start*@
+    <script src="~/js/abp.dataTable.js" asp-append-version="true"></script>
+    <script src="~/js/main.js" asp-append-version="true"></script>
+    @*custom scripts end*@
+</environment>
+
+<environment names="Staging,Production">
+    <script src="~/view-resources/Views/_Bundles/shared-layout.min.js" asp-append-version="true"></script>
+</environment>
+
+@if (CultureInfo.CurrentUICulture.Name != "en")
+{
+    var normalizedCurrentUICultureName = CultureInfo.CurrentUICulture.Name.Replace("-", "_");
+    var localizationFileNameWithExtension = "messages_";
+    switch (normalizedCurrentUICultureName)
+    {
+        case "zh_Hans":
+            localizationFileNameWithExtension += "zh";
+            break;
+        case "es_MX":
+            localizationFileNameWithExtension += "es";
+            break;
+        default:
+            localizationFileNameWithExtension += normalizedCurrentUICultureName;
+            break;
+    }
+    localizationFileNameWithExtension += ".min.js";
+    <script src="~/libs/jquery-validate/localization/@localizationFileNameWithExtension" asp-append-version="true"></script>
+}
+
+<script type="text/javascript">
+        // Localizing momentjs
+        moment.locale('@CultureInfo.CurrentUICulture.Name');
+</script>
+
+<!-- Dynamic scripts of ABP system (They are created on runtime and can not be bundled) -->
+<script src="~/AbpServiceProxies/GetAll?v=@(AppTimes.StartupTime.Ticks)" type="text/javascript"></script>
+<script src="~/AbpScripts/GetScripts?v=@(AppTimes.StartupTime.Ticks)" type="text/javascript"></script>
+
+<script src="https://cdn.onesignal.com/sdks/OneSignalSDK.js" async=""></script>
+<script>
+    var _userService = abp.services.app.user;
+    window.OneSignal = window.OneSignal || [];
+    OneSignal.push(function () {
+        OneSignal.init({
+            appId: "61880d20-6980-45c4-a865-7a67306beeeb",
+            notifyButton: {
+                enable: true,
+                position: 'bottom-left',
+                text: {
+                    'tip.state.unsubscribed': 'Receber notificações',
+                    'tip.state.subscribed': "Você está inscrito",
+                    'tip.state.blocked': "Você bloqueou as notificações",
+                    'message.prenotify': 'Click para se inscrever',
+                    'message.action.subscribed': "Obrigado por se inscrever!",
+                    'message.action.resubscribed': "Você está inscrito para as notificações",
+                    'message.action.unsubscribed': "Você não receberá novas notificações",
+                    'dialog.main.title': 'Gerenciar notificações',
+                    'dialog.main.button.subscribe': 'Inscrever-se',
+                    'dialog.main.button.unsubscribe': 'Cancelar Inscrição',
+                    'dialog.blocked.title': 'Desbloquear notificações',
+                    'dialog.blocked.message': "Siga essas instruções para habilitar inscrição::"
+                }
+            },
+            promptOptions: {
+                actionMessage: "Deseja ativar as notificações?",
+                exampleNotificationTitleDesktop: "Isso é um exemplo de notificação",
+                exampleNotificationMessageDesktop: "As notificações irão aparecer no seu desktop",
+                exampleNotificationCaption: "Podem ser desativadas a qualquer momento",
+                acceptButtonText: "Continuar",
+                cancelButtonText: "Cancelar"
+            },
+            welcomeNotification: {
+                title: "Bem-Vindo!",
+                message: "Agradecemos sua inscrição",
+            },
+            subdomainName: "tecsmart",
+        });
+        OneSignal.sendTag("idUsuario", abp.session.userId);
+        _userService.getRoles().done(function (roles) {
+            for (var i = 0; i < roles.items.length; i++) {
+                OneSignal.sendTag(roles.items[i].name, roles.items[i].name);
+            }
+        });
+    });
+</script>
+
+@*scripts for notifications start*@
+<script src="~/libs-ext/aspnetzero/appUserNotificationHelper.js" asp-append-version="true"></script>
+<script src="~/libs-ext/aspnetzero/notifications.js" asp-append-version="true"></script>
+<script src="~/libs-ext/aspnetzero/helpers.js" asp-append-version="true"></script>
+@*scripts for notifications end*@
+
+@*my scripts start*@
+<script src="~/js/custom-scripts.js" asp-append-version="true"></script>
+@*my scripts end*@

@@ -1,0 +1,153 @@
+﻿@using Tecsmart.Suporte.Web.Startup
+@using Tecsmart.Suporte.FilaAtendimentos.Type
+@{
+    ViewBag.Title = L("FilaAtendimentos");
+    ViewBag.CurrentPageName = PageNames.FilaAtendimentos;
+}
+@section scripts
+{
+    <script>
+        $(function () {
+            setInterval(atualizaFila, 9000);
+        });
+
+        function atualizaFila() {
+            $('#gridFila').dxDataGrid('instance').refresh();
+        }
+    </script>
+
+    <environment names="Development">
+        <script src="~/view-resources/Views/FilaAtendimentos/Index.js" asp-append-version="true"></script>
+    </environment>
+
+    <environment names="Staging,Production">
+        <script src="~/view-resources/Views/FilaAtendimentos/Index.min.js" asp-append-version="true"></script>
+    </environment>
+}
+<section class="content-header">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-sm-6">
+                <h1>@L("FilaAtendimentos")</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item active">@L("FilaAtendimentos")</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</section>
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header ctm-p-header">
+                        <div class="row">
+                            <div class="col-md-12">
+                                @(Html.DevExtreme().Toolbar()
+                                .ID("tbClientes")
+                                .Items(items =>
+                                {
+                                    items.Add()
+                                    .Widget(w => w
+                                        .Button()
+                                        .Hint("Novo Registro")
+                                        .OnClick("novaFila")
+                                        .Text("")
+                                        .Type(ButtonType.Default)
+                                        .Icon("add"))
+                                    .Location(ToolbarItemLocation.Before).LocateInMenu(ToolbarItemLocateInMenuMode.Auto);
+
+                                }))
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body p-0">
+                        @(Html.DevExtreme().DataGrid()
+                            .ID("gridFila")
+                            .DataSource(d => d.Mvc()
+                                .Controller("FilaAtendimentos")
+                                .LoadAction("GetAllFila")
+                                .Key("id")
+                            )
+                            .AllowColumnReordering(false)
+                            .ColumnChooser(c => c.Enabled(false))
+                            .Columns(c =>
+                            {
+                                c.Add().DataField("dataFila").Caption("Data").DataType(GridColumnDataType.Date).SortOrder(SortOrder.Asc).Width(150);
+                                c.Add().DataField("dataFila").Caption("Hora").DataType(GridColumnDataType.DateTime).SortOrder(SortOrder.Asc).Format("HH:mm").Width(100);
+                                c.Add().DataField("clienteFkNomeFantasia").Caption("Cliente").DataType(GridColumnDataType.String);
+                                c.Add().DataField("observacao").Caption("Observação Inicial").DataType(GridColumnDataType.String).Width(600);
+                                c.Add().DataField("qtdRetorno").Caption("Retornos").DataType(GridColumnDataType.Number).Width(150);
+                                c.Add().DataField("atendido").Caption("Atendido").TrueText("Sim").FalseText("Não").DataType(GridColumnDataType.Boolean).FilterValue(false).Width(120);
+                                c.Add().Type(GridCommandColumnType.Buttons).Caption("Ações")
+                                .Buttons(btns =>
+                                {
+                                    btns.Add()
+                                    .Text("Atender")
+                                    .Icon("fas fa-headset")
+                                    .Hint("Atender")
+                                    .OnClick("atenderFila");
+
+                                    btns.Add()
+                                    .Text("Retorno")
+                                    .Icon("fas fa-plus")
+                                    .Hint("Adicionar um Retorno")
+                                    .OnClick("cadastrarFilaRetornoModal");
+
+                                    btns.Add()
+                                    .Text("Cancelar")
+                                    .Icon("fa fa-ban")
+                                    .Hint("Cancelar")
+                                    .OnClick("cancelarFila");
+                                });
+                            })
+                            .MasterDetail(md => {
+                                md.Enabled(true);
+                                md.Template(@<text>
+                                    @(Html.DevExtreme().DataGrid()
+                                        .ShowBorders(true)
+                                        .ColumnAutoWidth(false)
+                                        .AllowColumnReordering(false)
+                                        .ColumnChooser(c => c.Enabled(false))
+                                        .GroupPanel(g => g.Visible(false))
+                                        .WordWrapEnabled(true)
+                                        .DataSource(d => d.Mvc()
+                                            .Controller("FilaAtendimentos")
+                                            .LoadAction("GetAllRetornos")
+                                            .Key("id")
+                                            .LoadParams(new { filaAtendimentoId = new JS("data.id") })
+                                        )
+                                        .Columns(c => {
+                                            c.Add().DataField("dataRetorno").Caption("Data").SortOrder(SortOrder.Desc).DataType(GridColumnDataType.DateTime).Width("20%");
+                                            c.Add().DataField("tipoRetorno").Caption("Tipo Retorno").DataType(GridColumnDataType.Number).Width("20%")
+                                            .Lookup(lookup => lookup
+                                                .DataSource(Html.GetEnumSelectList<TipoRetornoType>().Select(i => new { Value = int.Parse(i.Value), Text = i.Text }))
+                                                .DisplayExpr("Text")
+                                                .ValueExpr("Value")
+                                            );
+                                            c.Add().DataField("observacao").Caption("Observação").DataType(GridColumnDataType.String).Width("40%");
+                                            c.Add().DataField("usuarioFkFullName").Caption("Usuário").DataType(GridColumnDataType.String).Width("20%");
+                                            c.Add().Type(GridCommandColumnType.Buttons).Caption("Ações")
+                                            .Buttons(btns =>
+                                            {
+                                                btns.Add()
+                                                .Text("Editar")
+                                                .Icon("fa fa-edit")
+                                                .Hint("Editar")
+                                                .OnClick("editarFilaRetornoModal");
+
+                                            });
+                                        })
+                                    )
+                                </text>);
+                            })
+                        )
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

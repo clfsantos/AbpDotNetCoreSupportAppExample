@@ -1,0 +1,92 @@
+﻿@using Tecsmart.Suporte.Web.Models.Common.Modals
+@using Tecsmart.Suporte.Web.Models.Chamados
+@model CreateOrEditTarefaViewModel
+@{
+    var hide = true;
+    if (Model.IsEditMode)
+    {
+        hide = false;
+    }
+}
+
+@await Html.PartialAsync("~/Views/Shared/Modals/_ModalHeader.cshtml", new ModalHeaderViewModel(Model.IsEditMode ? L("TarefaEdit") : L("TarefaCreate")))
+
+<div class="modal-body">
+    <div id="TarefaInformationsTab">
+        <form name="TarefaInformationsForm" role="form" novalidate class="form-validation">
+            @if (Model.IsEditMode)
+            {
+                <input type="hidden" name="id" value="@Model.Tarefa.Id" />
+                <input type="hidden" name="status" value="@Model.Tarefa.Status.ToString()" />
+                <input type="hidden" name="cancelada" value="@Model.Tarefa.Cancelada.ToString()" />
+            }
+            <input type="hidden" name="chamadoId" value="@Model.Tarefa.ChamadoId" />
+            @(Html.DevExtreme().Form<CreateOrEditTarefaViewModel>()
+            .ID("formTarefa")
+            .ColCount(3)
+            .LabelLocation(FormLabelLocation.Top)
+            .Items(items => {
+
+                items.AddSimpleFor(t => t.Tarefa.DataTarefa)
+                .Editor(e => e
+                .DateBox()
+                .Type(DateBoxType.DateTime)
+                .Value(hide ? DateTime.Now : Model.Tarefa.DataTarefa)
+                .UseMaskBehavior(true)
+                .Name("dataTarefa"));
+
+                items.AddSimpleFor(t => t.Tarefa.Duracao)
+                .Editor(e => e
+                .DateBox()
+                .Type(DateBoxType.Time)
+                .Value(hide ? DateTime.Now : DateTime.Now.Date + Model.Tarefa.Duracao)
+                .UseMaskBehavior(true)
+                .Name("duracao"));
+
+                items.AddSimpleFor(t => t.Tarefa.UsuarioAtribuidoId)
+                .Editor(e => e
+                .SelectBox()
+                .DataSource(d => d.Mvc().Controller("Users").LoadAction("GetAllUsers").Key("id"))
+                .DisplayExpr("fullName")
+                .ValueExpr("id")
+                .Name("usuarioAtribuidoId"));
+
+                items.AddSimpleFor(t => t.Tarefa.Titulo)
+                .Editor(e => e
+                .TextBox()
+                .Name("titulo")).ColSpan(3);
+
+                items.AddSimpleFor(t => t.Tarefa.Descricao)
+                .IsRequired(true)
+                .Editor(e => e
+                .TextArea()
+                .Height("200px")
+                .Name("descricao")).ColSpan(3);
+
+                items.AddSimpleFor(t => t.Tarefa.TransferirChamado)
+                .Editor(e => e
+                .Switch()
+                .SwitchedOnText("Sim")
+                .SwitchedOffText("Não")
+                .Name("transferirChamado")).ColSpan(1);
+
+                items.AddSimpleFor(t => t.Tarefa.Status)
+                .Editor(e => e
+                .Switch()
+                .SwitchedOnText("Sim")
+                .SwitchedOffText("Não")
+                .Name("status")).ColSpan(1);
+
+                items.AddSimpleFor(t => t.Tarefa.Cancelada)
+                .Editor(e => e
+                .Switch()
+                .SwitchedOnText("Sim")
+                .SwitchedOffText("Não")
+                .Name("cancelada")).ColSpan(1);
+
+            }).FormData(Model))
+        </form>
+    </div>
+</div>
+
+@await Html.PartialAsync("~/Views/Shared/Modals/_ModalFooterWithSaveAndCancel.cshtml")

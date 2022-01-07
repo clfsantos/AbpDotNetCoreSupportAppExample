@@ -1,0 +1,42 @@
+﻿@{ ViewBag.Title = L("MudarFoto"); }
+@section scripts
+{
+    <script>
+        $("#uploader").dxFileUploader({
+            multiple: false,
+            name: "arquivo",
+            allowedFileExtensions: [".jpg", ".jpeg", ".png"],
+            maxFileSize: 1000000,
+            uploadMode: "instantly",
+            uploadUrl: "/Users/MudarFotoUpload/",
+            uploadHeaders: {
+                "X-XSRF-TOKEN": abp.security.antiForgery.getToken()
+            },
+            onFilesUploaded: function (e) {
+                window.location.href = "/";
+            }
+        }).dxFileUploader("instance");
+    </script>
+}
+<section class="content-header">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-sm-6">
+                <h1>Mudar Foto de Perfil</h1>
+            </div>
+        </div>
+    </div>
+</section>
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body">
+                        <div id="uploader"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

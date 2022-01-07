@@ -1,0 +1,91 @@
+﻿@using Tecsmart.Suporte.Web.Startup
+@{
+    ViewBag.Title = L("Releases");
+    ViewBag.CurrentPageName = PageNames.Releases;
+}
+@section scripts
+{
+    <environment names="Development">
+        <script src="~/view-resources/Views/Versoes/Index.js" asp-append-version="true"></script>
+    </environment>
+
+    <environment names="Staging,Production">
+        <script src="~/view-resources/Views/Versoes/Index.min.js" asp-append-version="true"></script>
+    </environment>
+}
+<section class="content-header">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-sm-6">
+                <h1>@L("Releases")</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item active">@L("Releases")</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</section>
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header ctm-p-header">
+                        <div class="row">
+                            <div class="col-md-12">
+                                @(Html.DevExtreme().Toolbar()
+                                .ID("tbReleases")
+                                .Items(items =>
+                                {
+                                    items.Add()
+                                    .Widget(w => w
+                                        .Button()
+                                        .Hint("Novo")
+                                        .OnClick("novoRelease")
+                                        .Text("")
+                                        .Type(ButtonType.Default)
+                                        .Icon("add"))
+                                    .Location(ToolbarItemLocation.Before).LocateInMenu(ToolbarItemLocateInMenuMode.Auto);
+                                }))
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body p-0">
+                        @(Html.DevExtreme().DataGrid()
+                            .ID("gridReleases")
+                            .DataSource(d => d.Mvc()
+                                .Controller("Versoes")
+                                .LoadAction("GetAllReleases")
+                                .Key("id")
+                            )
+                            .Columns(c =>
+                            {
+                                c.Add().DataField("dataRelease").Caption("Data").DataType(GridColumnDataType.Date).SortOrder(SortOrder.Desc);
+                                c.Add().DataField("produtoFkDescricao").Caption("Produto").DataType(GridColumnDataType.String);
+                                c.Add().DataField("versao").Caption("Release").DataType(GridColumnDataType.String);
+                                c.Add().DataField("descricao").Caption("Alterações").DataType(GridColumnDataType.String);
+                                c.Add()
+                                .Type(GridCommandColumnType.Buttons)
+                                .Buttons(btns =>
+                                {
+                                    btns.Add()
+                                        .Text("Editar")
+                                        .Icon("fa fa-edit")
+                                        .Hint("Editar")
+                                        .OnClick("editarRelease");
+                                    btns.Add()
+                                        .Text("Excluir")
+                                        .Icon("fas fa-trash")
+                                        .Hint("Excluir")
+                                        .OnClick("excluirRelease");
+                                });
+                            })
+                        )
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

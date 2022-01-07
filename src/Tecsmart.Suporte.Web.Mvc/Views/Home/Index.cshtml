@@ -1,0 +1,486 @@
+﻿@using Tecsmart.Suporte.Web.Startup
+@using Tecsmart.Suporte.Web.Views.Shared.Components.CrachasInfo
+
+@{ ViewBag.Title = L("HomePage");
+    ViewBag.CurrentPageName = PageNames.Home; }
+@section scripts
+{
+    <environment names="Development">
+        <script src="~/view-resources/Views/Home/Index.js" asp-append-version="true"></script>
+    </environment>
+
+    <environment names="Staging,Production">
+        <script src="~/view-resources/Views/_Bundles/home-index.min.js" asp-append-version="true"></script>
+    </environment>
+}
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-12">
+                <h1 class="m-0 text-dark">Dashboard</h1>
+            </div>
+        </div>
+    </div>
+</div>
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-lg-8 col-12">
+                <div class="card">
+                    <div class="card-header ctm-p-header">
+                        <div class="row">
+                            <div class="col-md-12">
+                                @(Html.DevExtreme().Toolbar()
+                                .ID("tbChamadosDia")
+                                .Items(items =>
+                                {
+                                    items.Add().Html("<h3 class='card-title'> <i class='fas fa-chart-bar mr-1'></i> Chamados por dia </h3>")
+                                    .Location(ToolbarItemLocation.Before).LocateInMenu(ToolbarItemLocateInMenuMode.Never);
+
+                                    items.Add()
+                                    .Widget(w => w
+                                        .SelectBox()
+                                        .OnValueChanged("onChangeChamadosDia")
+                                        .DataSource((new JS("[{ value: 7, text: 'Últimos 7 Dias' },{ value: 30, text: 'Últimos 30 Dias' }]")))
+                                        .Value(30)
+                                        .DisplayExpr("text")
+                                        .ValueExpr("value"))
+                                    .Location(ToolbarItemLocation.After).LocateInMenu(ToolbarItemLocateInMenuMode.Never);
+                                }))
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        @(Html.DevExtreme().Chart()
+                            .ID("chartChamadosDia")
+                            .OnPointClick("chartChamadosDiaClick")
+                            .DataSource(d => d.Mvc()
+                                .Key("dataAbertura")
+                                .Controller("Chamados")
+                                .LoadAction("GetAllChamadosDia")
+                            )
+                            .DataSourceOptions(o => o
+                                .Filter("['dataAbertura', '>', '"+ DateTime.Now.AddDays(-30).Date.ToString("yyyy-MM-dd") + "']")
+                            )
+                            .Title(t => t
+                                .Text("Chamados por dia")
+                            )
+                            .CommonSeriesSettings(s => s
+                                .ArgumentField("dataAbertura")
+                                .Type(SeriesType.Spline)
+                            )
+                            .Series(s => s
+                                .Add()
+                                .ValueField("quantidade")
+                                .Name("Dia")
+                                .Color("#0071B9")
+                            )
+                            .ArgumentAxis(a => a
+                                .ArgumentType(ChartDataType.DateTime)
+                                .Label(l => l.Format(Format.ShortDate))
+                            )
+                            .Legend(l => l
+                                .VerticalAlignment(VerticalEdge.Bottom)
+                                .HorizontalAlignment(HorizontalAlignment.Center)
+                                .ItemTextPosition(Position.Top)
+                            )
+                            .Export(e => e.Enabled(true))
+                            .LoadingIndicator(l => l.Enabled(true).Text("Carregando..."))
+                            .Tooltip(t => t
+                                .Enabled(true)
+                                .CustomizeTooltip(@<text>
+                                    function(arg) {
+                                        return {
+                                            text: arg.argument.toLocaleDateString("pt-BR") + " Chamados: " + arg.valueText
+                                        };
+                                    }
+                                </text>)
+                            )
+                        )
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4 col-12">
+                <div class="card">
+                    <div class="card-header ctm-p-header">
+                        <div class="row">
+                            <div class="col-md-12">
+                                @(Html.DevExtreme().Toolbar()
+                                .ID("tbChamadosTecnico")
+                                .Items(items =>
+                                {
+                                    items.Add().Html("<h3 class='card-title'> <i class='fas fa-chart-pie mr-1'></i> Chamados por técnico </h3>")
+                                    .Location(ToolbarItemLocation.Before).LocateInMenu(ToolbarItemLocateInMenuMode.Never);
+
+                                }))
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        @(Html.DevExtreme().PieChart()
+                            .ID("chartChamadosTecnico")
+                            .DataSource(d => d.Mvc()
+                                .Controller("Chamados")
+                                .LoadAction("GetChamadosTecnico")
+                            )
+                            .DataSourceOptions(o => o
+                                .Filter("['dataAbertura', '>', '" + DateTime.Now.AddDays(-30).Date.ToString("yyyy-MM-dd") + "']")
+                            )
+                            .Series(s => s
+                                .Add()
+                                .ArgumentField("key")
+                                .ValueField("count")
+                                .Label(l => l
+                                    .Visible(true)
+                                    .Connector(c => c
+                                        .Visible(true)
+                                        .Width(1)
+                                    )
+                                )
+                            )
+                            .Legend(l => l
+                                .VerticalAlignment(VerticalEdge.Bottom)
+                                .HorizontalAlignment(HorizontalAlignment.Center)
+                                .ItemTextPosition(Position.Top)
+                            )
+                            .Export(e => e.Enabled(true))
+                            .LoadingIndicator(l => l.Enabled(true).Text("Carregando..."))
+                            .Tooltip(t => t
+                                .Enabled(true)
+                            )
+                        )
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-lg-8 col-12">
+                <div class="card">
+                    <div class="card-header ctm-p-header">
+                        <div class="row">
+                            <div class="col-md-12">
+                                @(Html.DevExtreme().Toolbar()
+                                .ID("tbChamadosMes")
+                                .Items(items =>
+                                {
+                                    items.Add().Html("<h3 class='card-title'> <i class='fas fa-chart-bar mr-1'></i> Chamados por mês </h3>")
+                                    .Location(ToolbarItemLocation.Before).LocateInMenu(ToolbarItemLocateInMenuMode.Never);
+
+                                }))
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        @(Html.DevExtreme().Chart()
+                            .ID("chartChamadosMes")
+                            .DataSource(d => d.Mvc()
+                                .Key("ano")
+                                .Controller("Chamados")
+                                .LoadAction("GetAllChamadosMes")
+                            )
+                            .DataSourceOptions(o => o
+                                .Filter("['ano', '>', '" + DateTime.Now.Date.Year + "']")
+                            )
+                            .Title(t => t
+                                .Text("Chamados por mês")
+                            )
+                            .CommonSeriesSettings(s => s
+                                .ArgumentField("ano")
+                                .Type(SeriesType.Bar)
+                            )
+                            .Series(s => s
+                                .Add()
+                                .ValueField("quantidade")
+                                .Name("Mês")
+                                .Color("#0071B9")
+                            )
+                            .ArgumentAxis(a => a
+                                .ArgumentType(ChartDataType.String)
+                            )
+                            .Legend(l => l
+                                .VerticalAlignment(VerticalEdge.Bottom)
+                                .HorizontalAlignment(HorizontalAlignment.Center)
+                                .ItemTextPosition(Position.Top)
+                            )
+                            .Export(e => e.Enabled(true))
+                            .LoadingIndicator(l => l.Enabled(true).Text("Carregando..."))
+                            .Tooltip(t => t
+                                .Enabled(true)
+                                .CustomizeTooltip(@<text>
+                                    function(arg) {
+                                        return {
+                                            text: arg.argument + " Chamados: " + arg.valueText
+                                        };
+                                    }
+                                </text>)
+                            )
+                        )
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4 col-12">
+                <div class="card">
+                    <div class="card-header ctm-p-header">
+                        <div class="row">
+                            <div class="col-md-12">
+                                @(Html.DevExtreme().Toolbar()
+                                .ID("tbChamadosAno")
+                                .Items(items =>
+                                {
+                                    items.Add().Html("<h3 class='card-title'> <i class='fas fa-chart-bar mr-1'></i> Chamados por ano </h3>")
+                                    .Location(ToolbarItemLocation.Before).LocateInMenu(ToolbarItemLocateInMenuMode.Never);
+
+                                }))
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        @(Html.DevExtreme().Chart()
+                            .ID("chartChamadosAno")
+                            .OnPointClick("chartChamadosAnoClick")
+                            .DataSource(d => d.Mvc()
+                                .Key("ano")
+                                .Controller("Chamados")
+                                .LoadAction("GetAllChamadosAno")
+                            )
+                            .Title(t => t
+                                .Text("Chamados por ano")
+                            )
+                            .CommonSeriesSettings(s => s
+                                .ArgumentField("ano")
+                                .Type(SeriesType.Bar)
+                            )
+                            .Series(s => s
+                                .Add()
+                                .ValueField("quantidade")
+                                .Name("Ano")
+                                .Color("#0071B9")
+                            )
+                            .ArgumentAxis(a => a
+                                .ArgumentType(ChartDataType.String)
+                            )
+                            .Legend(l => l
+                                .VerticalAlignment(VerticalEdge.Bottom)
+                                .HorizontalAlignment(HorizontalAlignment.Center)
+                                .ItemTextPosition(Position.Top)
+                            )
+                            .Export(e => e.Enabled(true))
+                            .LoadingIndicator(l => l.Enabled(true).Text("Carregando..."))
+                            .Tooltip(t => t
+                                .Enabled(true)
+                                .CustomizeTooltip(@<text>
+                                    function(arg) {
+                                        return {
+                                            text: arg.argument + " Chamados: " + arg.valueText
+                                        };
+                                    }
+                                </text>)
+                            )
+                        )
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header ctm-p-header">
+                        <div class="row">
+                            <div class="col-md-12">
+                                @(Html.DevExtreme().Toolbar()
+                                .ID("tbEtapasAbertas")
+                                .Items(items =>
+                                {
+                                    items.Add().Html("<h3 class='card-title'> <i class='fas fa-flag mr-1'></i> Suas Etapas </h3>")
+                                    .Location(ToolbarItemLocation.Before).LocateInMenu(ToolbarItemLocateInMenuMode.Never);
+
+                                }))
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body p-0">
+                        @(Html.DevExtreme().DataGrid()
+                            .ID("gridEtapasAbertas")
+                            .OnCellDblClick("editChamadoExterno")
+                            .DataSource(d => d.Mvc()
+                                .Controller("Chamados")
+                                .LoadAction("GetEtapasAbertasPendentes")
+                                .Key("id")
+                            )
+                            .AllowColumnReordering(false)
+                            .FilterRow(f => f.Visible(false))
+                            .GroupPanel(g => g.Visible(false))
+                            .HeaderFilter(f => f.Visible(false))
+                            .WordWrapEnabled(true)
+                            .Sorting(s => s.Mode(GridSortingMode.None))
+                            .ColumnChooser(c => c.Enabled(false))
+                            .Columns(c =>
+                            {
+                                c.Add().DataField("chamadoId").Caption("Chamado").DataType(GridColumnDataType.Number);
+                                c.Add().DataField("dataEtapa").Caption("Data").DataType(GridColumnDataType.DateTime);
+                                c.Add().DataField("etapaDescricao").Caption("Etapa").DataType(GridColumnDataType.String);
+                                c.Add().DataField("clienteFantasia").Caption("Empresa").DataType(GridColumnDataType.String);
+                                c.Add().DataField("statusDescricao").Caption("Status").DataType(GridColumnDataType.String);
+                                c.Add()
+                                    .Type(GridCommandColumnType.Buttons)
+                                    .Buttons(btns =>
+                                    {
+                                        btns.Add()
+                                            .Text("Editar")
+                                            .Icon("fa fa-edit")
+                                            .Hint("Editar")
+                                            .OnClick("editChamadoExterno");
+                                    });
+                            })
+                        )
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header ctm-p-header">
+                        <div class="row">
+                            <div class="col-md-12">
+                                @(Html.DevExtreme().Toolbar()
+                                .ID("tbEtapasAbertasGeral")
+                                .Items(items =>
+                                {
+                                    items.Add().Html("<h3 class='card-title'> <i class='fas fa-flag mr-1'></i> Etapas de Implantação </h3>")
+                                    .Location(ToolbarItemLocation.Before).LocateInMenu(ToolbarItemLocateInMenuMode.Never);
+
+                                }))
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body p-0">
+                        @(Html.DevExtreme().DataGrid()
+                            .ID("gridEtapasAbertasGeral")
+                            .OnCellDblClick("editChamadoExterno")
+                            .DataSource(d => d.Mvc()
+                                .Controller("Chamados")
+                                .LoadAction("GetEtapasAbertasPendentesGeral")
+                                .Key("id")
+                            )
+                            .AllowColumnReordering(false)
+                            .FilterRow(f => f.Visible(false))
+                            .GroupPanel(g => g.Visible(false))
+                            .HeaderFilter(f => f.Visible(false))
+                            //.WordWrapEnabled(true)
+                            .ColumnChooser(c => c.Enabled(false))
+                            .Columns(c =>
+                            {
+                                c.Add().DataField("chamadoId").Caption("Chamado").DataType(GridColumnDataType.Number);
+                                c.Add().DataField("dataEtapa").Caption("Data").DataType(GridColumnDataType.DateTime);
+                                c.Add().DataField("etapaDescricao").Caption("Etapa").DataType(GridColumnDataType.String);
+                                c.Add().DataField("clienteFantasia").Caption("Empresa").DataType(GridColumnDataType.String);
+                                c.Add().DataField("responsavelAtualFkFullName").Caption("Responsável").DataType(GridColumnDataType.String);
+                                c.Add().DataField("statusDescricao").Caption("Status").DataType(GridColumnDataType.String);
+                                c.Add().DataField("etapaHorasCorridas").Caption("Horas Decorridas").DataType(GridColumnDataType.Number);
+                                c.Add().DataField("diasDecorridos").Caption("Dias Decorridos").DataType(GridColumnDataType.Number).AllowSorting(false);
+                                c.Add().DataField("slaPrevisto").Caption("Horas Previstas").DataType(GridColumnDataType.Number);
+                                c.Add().DataField("slaVencido").Caption("SLA Vencido").DataType(GridColumnDataType.Boolean).TrueText("SIM").FalseText("NÃO");
+                                c.Add()
+                                    .Type(GridCommandColumnType.Buttons)
+                                    .Buttons(btns =>
+                                    {
+                                        btns.Add()
+                                            .Text("Editar")
+                                            .Icon("fa fa-edit")
+                                            .Hint("Editar")
+                                            .OnClick("editChamadoExterno");
+                                    });
+                            })
+                        )
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header ctm-p-header">
+                        <div class="row">
+                            <div class="col-md-12">
+                                @(Html.DevExtreme().Toolbar()
+                                .ID("tbAssistenciasAbertas")
+                                .Items(items =>
+                                {
+                                    items.Add().Html("<h3 class='card-title'> <i class='fas fa-wrench mr-1'></i> Assistências em aberto </h3>")
+                                    .Location(ToolbarItemLocation.Before).LocateInMenu(ToolbarItemLocateInMenuMode.Never);
+
+                                }))
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body p-0">
+                        @(Html.DevExtreme().DataGrid()
+                            .ID("gridAssistenciasAbertas")
+                            .OnCellDblClick("editChamadoExterno")
+                            .DataSource(d => d.Mvc()
+                                .Controller("Chamados")
+                                .LoadAction("GetAssistenciasAbertas")
+                                .Key("id")
+                            )
+                            .AllowColumnReordering(false)
+                            .FilterRow(f => f.Visible(false))
+                            .GroupPanel(g => g.Visible(false))
+                            .HeaderFilter(f => f.Visible(false))
+                            .WordWrapEnabled(true)
+                            .Sorting(s => s.Mode(GridSortingMode.None))
+                            .ColumnChooser(c => c.Enabled(false))
+                            .Columns(c =>
+                            {
+                                c.Add().DataField("chamadoId").Caption("Chamado").DataType(GridColumnDataType.Number);
+                                c.Add().DataField("chamadoFkDataAbertura").Caption("Data").DataType(GridColumnDataType.DateTime);
+                                c.Add().DataField("equipamentoFkClienteFkNomeFantasia").Caption("Cliente").DataType(GridColumnDataType.String);
+                                c.Add().DataField("equipamentoFkModeloFkDescricao").Caption("Equipamento").DataType(GridColumnDataType.String);
+                                c.Add().DataField("diasManutencao").Caption("Dias em Manutenção").DataType(GridColumnDataType.String);
+                                c.Add()
+                                    .Type(GridCommandColumnType.Buttons)
+                                    .Buttons(btns =>
+                                    {
+                                        btns.Add()
+                                            .Text("Editar")
+                                            .Icon("fa fa-edit")
+                                            .Hint("Editar")
+                                            .OnClick("editChamadoExterno");
+                                    });
+                            })
+                        )
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header ctm-p-header">
+                        <div class="row">
+                            <div class="col-md-12">
+                                @(Html.DevExtreme().Toolbar()
+                            .ID("tbCrachasInfo")
+                            .Items(items =>
+                            {
+                                items.Add().Html("<h3 class='card-title'> <i class='fas fa-id-card-alt mr-1'></i> Resumo dos crachás </h3>")
+                                .Location(ToolbarItemLocation.Before).LocateInMenu(ToolbarItemLocateInMenuMode.Never);
+
+                            }))
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-footer">
+                        @await Component.InvokeAsync(typeof(CrachasInfoViewComponent))
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</section>

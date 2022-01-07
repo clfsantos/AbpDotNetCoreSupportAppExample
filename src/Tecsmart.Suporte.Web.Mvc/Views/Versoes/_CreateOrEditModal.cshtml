@@ -1,0 +1,56 @@
+﻿@using Tecsmart.Suporte.Web.Models.Common.Modals
+@using Tecsmart.Suporte.Web.Models.Releases
+@model CreateOrEditReleaseViewModel
+
+@await Html.PartialAsync("~/Views/Shared/Modals/_ModalHeader.cshtml", new ModalHeaderViewModel(Model.IsEditMode ? ("Releases") : L("Releases")))
+
+<div class="modal-body">
+    <div id="ReleasesInformationsTab">
+        <form name="ReleasesInformationsForm" role="form" novalidate class="form-validation">
+            @if (Model.IsEditMode)
+            {
+                <input type="hidden" name="id" value="@Model.Release.Id" />
+            }
+            @(Html.DevExtreme().Form<CreateOrEditReleaseViewModel>()
+            .ID("formReleases")
+            //.OnContentReady("formTarefaValidate")
+            .ColCount(3)
+            .LabelLocation(FormLabelLocation.Top)
+            .Items(items => {
+
+                items.AddSimpleFor(m => m.Release.ProdutoId)
+                .Editor(e => e
+                    .SelectBox()
+                    .DataSource(d => d.Mvc().Controller("Produtos").LoadAction("GetAllProdutos").Key("id"))
+                    .DisplayExpr("descricao")
+                    .ValueExpr("id")
+                    .Name("produtoId")
+                ).ColSpan(1);
+
+                items.AddSimpleFor(m => m.Release.Versao)
+                .Editor(e => e
+                    .TextBox()
+                    .Name("versao")
+                ).ColSpan(1);
+
+                items.AddSimpleFor(m => m.Release.DataRelease)
+                .Editor(e => e
+                    .DateBox()
+                    .Type(DateBoxType.Date)
+                    .Value(Model.IsEditMode ? Model.Release.DataRelease : DateTime.Now)
+                    .UseMaskBehavior(true)
+                    .Name("dataRelease")
+                ).ColSpan(1);
+
+                items.AddSimpleFor(m => m.Release.Descricao)
+                .Editor(e => e
+                    .TextArea()
+                    .Name("descricao")
+                ).ColSpan(3);
+
+            }).FormData(Model))
+        </form>
+    </div>
+</div>
+
+@await Html.PartialAsync("~/Views/Shared/Modals/_ModalFooterWithSaveAndCancel.cshtml")

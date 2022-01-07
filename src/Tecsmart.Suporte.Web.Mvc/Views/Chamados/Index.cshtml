@@ -1,0 +1,232 @@
+﻿@using Tecsmart.Suporte.Web.Startup
+@using Tecsmart.Suporte.Web.Models.Chamados
+@using Tecsmart.Suporte.Authorization.Users
+@using Tecsmart.Suporte.Chamados.Type
+@inject UserManager UserManager
+@model CreateOrEditChamadoViewModel
+@{
+    ViewBag.Title = L("Chamados");
+    ViewBag.CurrentPageName = PageNames.Chamados;
+    var usuario = await UserManager.GetUserAsync(User);
+}
+@section scripts
+{
+    <environment names="Development">
+        <script src="~/view-resources/Views/Chamados/Index.js" asp-append-version="true"></script>
+    </environment>
+
+    <environment names="Staging,Production">
+        <script src="~/view-resources/Views/Chamados/Index.min.js" asp-append-version="true"></script>
+    </environment>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.0.0/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.9/jspdf.plugin.autotable.min.js"></script>
+    <script>
+        window.jsPDF = window.jspdf.jsPDF;
+        applyPlugin(window.jsPDF);
+    </script>
+}
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="row mb-2">
+            <div class="col-sm-6">
+                <h1 class="m-0 text-dark">Chamados</h1>
+            </div><!-- /.col -->
+            <div class="col-sm-6">
+
+            </div><!-- /.col -->
+        </div><!-- /.row -->
+    </div><!-- /.container-fluid -->
+</div>
+<!-- /.content-header -->
+<!-- Main content -->
+<section class="content">
+    <div class="container-fluid">
+
+
+
+
+
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header ctm-p-header">
+                        @*<button id="addCat" type="button" onclick="cadastrarCategoriaModal();" class="btn btn-outline-primary">Adicionar</button>*@
+                        @(Html.DevExtreme().Toolbar()
+                            .ID("tbChamados")
+                            .Items(items =>
+                            {
+                                items.Add()
+                                .Widget(w => w
+                                    .Button()
+                                    .Icon("fas fa-plus")
+                                    .Text("Adicionar")
+                                    .Type(ButtonType.Default)
+                                    .UseSubmitBehavior(true)
+                                    .ID("composeButton")
+                                    .OnClick("addChamadoTab")
+                                )
+                                .Location(ToolbarItemLocation.Before).LocateInMenu(ToolbarItemLocateInMenuMode.Never);
+
+                                items.Add()
+                                .Widget(w => w
+                                    .Button()
+                                    .OnClick("viewFilterChamados")
+                                    .Text("")
+                                    .Type(ButtonType.Normal)
+                                    .Icon("fas fa-filter")
+                                )
+                                .Location(ToolbarItemLocation.After).LocateInMenu(ToolbarItemLocateInMenuMode.Auto);
+                            })
+                        )
+
+                    </div>
+                    <!-- /.card-header -->
+                    <div class="card-body p-0">
+
+
+                        <div class="card card-primary card-outline card-outline-tabs" style="margin-bottom:0;">
+                            <div class="card-header p-0 border-bottom-0">
+                                <ul class="nav nav-tabs" id="myTab" role="tablist">
+                                    <li class="nav-item">
+                                        <a class="nav-link active" href="#home">Chamados</a>
+                                    </li>
+
+                                </ul>
+                            </div>
+                            <div class="card-body p-0">
+                                <div class="tab-content">
+                                    <div class="tab-pane fade show active" id="home">
+                                        @(Html.DevExtreme().DataGrid<CreateOrEditChamadoViewModel>()
+                                        .ID("gridChamados")
+                                        .DataSource(d => d.Mvc()
+                                            .Controller("Chamados")
+                                            .LoadAction("GetAllChamados")
+                                            .Key("id")
+                                        )
+                                        .OnToolbarPreparing("gridChamadosToolbar")
+                                        .OnRowPrepared("formatRow")
+                                        .OnCellDblClick("chamadosDblClick")
+                                        .ColumnAutoWidth(false)
+                                        .Columns(c =>
+                                        {
+                                            c.Add().DataField("id").Caption("ID").AllowEditing(false).SortOrder(SortOrder.Desc).DataType(GridColumnDataType.Number).Width("10%");
+                                            c.Add().DataField("dataAbertura").Caption("Aberto em").DataType(GridColumnDataType.DateTime).Width("10%");
+                                            c.Add().DataField("ocorrencia").Caption("Ocorrência").DataType(GridColumnDataType.String).Width("30%");
+                                            c.Add().DataField("clienteFkNomeFantasia").Caption("Cliente").DataType(GridColumnDataType.String).Width("20%");
+                                            c.Add().DataField("responsavelAtualFkName").Caption("Responsável").FilterValue(@usuario.Name).DataType(GridColumnDataType.String).Width("10%");
+                                            c.Add().DataField("status").Caption("Situação").DataType(GridColumnDataType.Number).Width("10%")
+                                                .Lookup(lookup => lookup
+                                                .DataSource(Html.GetEnumSelectList<StatusChamadoType>().Select(i => new { Value = int.Parse(i.Value), Text = i.Text }))
+                                                .DisplayExpr("Text")
+                                                .ValueExpr("Value")
+                                            );
+                                            c.Add().DataField("temAnexo").Caption("Anexo").TrueText("Sim").FalseText("Não").DataType(GridColumnDataType.Boolean).Width("10%");
+                                            c.Add()
+                                                .Type(GridCommandColumnType.Buttons)
+                                                .Buttons(btns =>
+                                                {
+                                                    btns.Add()
+                                                        .Text("Editar")
+                                                        .Icon("fa fa-edit")
+                                                        .Hint("Editar")
+                                                    .OnClick("addChamadoTab");
+                                                    btns.Add()
+                                                        .Text("Cancelar")
+                                                        .Icon("fa fa-ban")
+                                                        .Hint("Excluir")
+                                                    .OnClick("cancelarChamado");
+                                                });
+                                        })
+                                        .Export(e => e.Enabled(true).FileName("Chamados"))
+                                        .StateStoring(s => s
+                                            .Enabled(true)
+                                            .Type(StateStoringType.LocalStorage)
+                                            .StorageKey("StgGridChamados")
+                                        )
+                                        .Summary(s => s.TotalItems(items =>
+                                        {
+                                            items.Add().Column("id")
+                                                .SummaryType(SummaryType.Count);
+
+                                        }))
+                                        )
+                                        <div class="row">
+                                            <div class="col-12">
+                                                <div class="card">
+                                                    <div class="card-header ctm-p-header">
+                                                        <div class="row">
+                                                            <div class="col-md-12">
+                                                                @(Html.DevExtreme().Toolbar()
+                                                                .ID("tbEtapasAbertas")
+                                                                .Items(items =>
+                                                                {
+                                                                    items.Add().Html("<h3 class='card-title'> <i class='fas fa-flag mr-1'></i> Suas Etapas </h3>")
+                                                                    .Location(ToolbarItemLocation.Before).LocateInMenu(ToolbarItemLocateInMenuMode.Never);
+
+                                                                }))
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="card-body p-0">
+                                                        @(Html.DevExtreme().DataGrid()
+                                                        .ID("gridEtapasAbertas")
+                                                        .OnCellDblClick("editChamadoExterno")
+                                                        .DataSource(d => d.Mvc()
+                                                            .Controller("Chamados")
+                                                            .LoadAction("GetEtapasAbertasPendentes")
+                                                            .Key("id")
+                                                        )
+                                                        .AllowColumnReordering(false)
+                                                        .FilterRow(f => f.Visible(false))
+                                                        .GroupPanel(g => g.Visible(false))
+                                                        .HeaderFilter(f => f.Visible(false))
+                                                        .WordWrapEnabled(true)
+                                                        .Sorting(s => s.Mode(GridSortingMode.None))
+                                                        .ColumnChooser(c => c.Enabled(false))
+                                                        .Columns(c =>
+                                                        {
+                                                            c.Add().DataField("chamadoId").Caption("Chamado").DataType(GridColumnDataType.Number);
+                                                            c.Add().DataField("dataEtapa").Caption("Data").DataType(GridColumnDataType.DateTime);
+                                                            c.Add().DataField("etapaDescricao").Caption("Etapa").DataType(GridColumnDataType.String);
+                                                            c.Add().DataField("clienteFantasia").Caption("Empresa").DataType(GridColumnDataType.String);
+                                                            c.Add().DataField("statusDescricao").Caption("Status").DataType(GridColumnDataType.String);
+                                                            c.Add()
+                                                                .Type(GridCommandColumnType.Buttons)
+                                                                .Buttons(btns =>
+                                                                {
+                                                                    btns.Add()
+                                                                        .Text("Editar")
+                                                                        .Icon("fa fa-edit")
+                                                                        .Hint("Editar")
+                                                                        .OnClick("editChamadoExterno");
+                                                                });
+                                                        })
+                                                        )
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+
+                                    </div>
+
+                                </div>
+                            </div>
+                            <!-- /.card -->
+                        </div>
+
+
+
+                    </div>
+
+
+
+
+                    <!-- /.card-body -->
+                </div>
+                <!-- /.card -->
+            </div>
+        </div>
+    </div>
+</section>

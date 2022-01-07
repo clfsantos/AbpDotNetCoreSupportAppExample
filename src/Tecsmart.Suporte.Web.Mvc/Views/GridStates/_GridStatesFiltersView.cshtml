@@ -1,0 +1,57 @@
+﻿@using Tecsmart.Suporte.Web.Models.Common.Modals
+@using Tecsmart.Suporte.Web.Models.GridStates
+@model CreateOrEditGridStateViewModel
+
+@await Html.PartialAsync("~/Views/Shared/Modals/_ModalHeader.cshtml", new ModalHeaderViewModel(L("Filtros")))
+
+<div class="modal-body">
+    <div id="GridStateInformationsTab">
+        <input type="hidden" name="tela" value="@Model.GridState.Tela" />
+        <input type="hidden" name="state" value="@Model.GridState.State" />
+        @(Html.DevExtreme().DataGrid()
+            .ID("gridStates")
+            .ShowBorders(true)
+            .OnCellDblClick("gridStatesDblClick")
+            .OnToolbarPreparing("onToolbarPreparingGridStates")
+            .DataSource(d => d.Mvc()
+                .Controller("GridStates")
+                .LoadAction("GetAllStates")
+                .Key("id")
+                .LoadParams(new { tela = Model.GridState.Tela })
+            )
+            .AllowColumnReordering(false)
+            .FilterRow(f => f.Visible(false))
+            .GroupPanel(g => g.Visible(false))
+            .HeaderFilter(f => f.Visible(false))
+            .WordWrapEnabled(true)
+            .Sorting(s => s.Mode(GridSortingMode.None))
+            .ColumnChooser(c => c.Enabled(false))
+            .ColumnAutoWidth(false)
+            .Columns(c =>
+            {
+                c.Add().DataField("descricao").Caption("Filtros disponíveis").Width("85%");
+                c.Add().Width("15%")
+                    .Type(GridCommandColumnType.Buttons)
+                    .Buttons(btns =>
+                    {
+                        btns.Add()
+                            .Text("Editar")
+                            .Icon("fas fa-redo-alt")
+                            .Hint("Selecionar")
+                            .OnClick("gridStatesDblClick");
+                        btns.Add()
+                            .Text("Editar")
+                            .Icon("fa fa-edit")
+                            .Hint("Editar")
+                            .OnClick("editFiltroState");
+                        btns.Add()
+                            .Text("Excluir")
+                            .Icon("fas fa-trash")
+                            .Hint("Excluir")
+                            .OnClick("delFiltroState");
+                    });
+            })
+        )
+
+    </div>
+</div>

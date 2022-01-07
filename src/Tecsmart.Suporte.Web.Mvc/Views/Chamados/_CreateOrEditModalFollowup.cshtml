@@ -1,0 +1,88 @@
+﻿@using Tecsmart.Suporte.Web.Models.Common.Modals
+@using Tecsmart.Suporte.Web.Models.Chamados
+@model CreateOrEditFollowupViewModel
+
+@await Html.PartialAsync("~/Views/Shared/Modals/_ModalHeader.cshtml", new ModalHeaderViewModel(Model.IsEditMode ? L("FollowupEdit") : L("FollowupCreate")))
+
+<div class="modal-body">
+    <div id="FollowupInformationsTab">
+        <form name="FollowupInformationsForm" role="form" novalidate class="form-validation">
+            @if (Model.IsEditMode)
+            {
+                <input type="hidden" name="id" value="@Model.Followup.Id" />
+                <input type="hidden" name="dataFollowup" value="@Model.Followup.DataFollowup" />
+                <input type="hidden" name="cancelado" value="@Model.Followup.Cancelado.ToString()" />
+            }
+            <input type="hidden" name="chamadoId" value="@Model.Followup.ChamadoId" />
+            @(Html.DevExtreme().Form<CreateOrEditFollowupViewModel>()
+            .ID("formFollowup")
+            .OnContentReady("followupOnFormReady")
+            .ColCount(1)
+            .LabelLocation(FormLabelLocation.Top)
+            .Items(items => {
+
+                items.AddGroup()
+                .Name("grupo")
+                .Items(groupItems =>
+                {
+                    groupItems.AddSimpleFor(f => f.Followup.Tipo)
+                    .Name("tipoItem")
+                    .Editor(e => e
+                        .SelectBox()
+                        .DataSource((new JS("[{ value: 1, text: 'Followup de Seguimento' },{ value: 2, text: 'Transferência de Chamado' },{ value: 3, text: 'Followup de Manutenção' }]")))
+                        .DisplayExpr("text")
+                        .ValueExpr("value")
+                        .OnValueChanged("sbFollowupTipoChanged")
+                        .ID("followupTipo")
+                        .Name("tipo")
+                    );
+
+                    groupItems.AddSimpleFor(f => f.Followup.EventoFollowupId)
+                    .Name("eventoFollowupItem")
+                    .Visible(false)
+                    .Editor(e => e
+                        .SelectBox()
+                        .DataSource(d => d.Mvc().Controller("Eventos").LoadAction("GetAllEventos").Key("id"))
+                        .DisplayExpr("descricao")
+                        .ValueExpr("id")
+                        .SearchEnabled(true)
+                        .ID("eventoFollowupId")
+                        .Name("eventoFollowupId")
+                    );
+
+                    groupItems.AddSimpleFor(f => f.Followup.TransferirChamado)
+                    .Name("transferirChamadoItem")
+                    .Visible(false)
+                    .Editor(e => e
+                        .Switch()
+                        .OnValueChanged("transferirChamadoChanged")
+                        .SwitchedOnText("SIM")
+                        .SwitchedOffText("NÃO")
+                        .ID("transferirChamado")
+                        .Name("transferirChamado")
+                    );
+
+                    groupItems.AddSimpleFor(f => f.Followup.UsuarioTransferenciaId)
+                    .Name("usuarioTransferenciaItem")
+                        .Editor(e => e
+                        .SelectBox()
+                        .DataSource(d => d.Mvc().Controller("Users").LoadAction("GetAllUsers").Key("id"))
+                        .DisplayExpr("fullName")
+                        .ValueExpr("id")
+                        .ID("followupUsuarioTransferencia")
+                        .Name("usuarioTransferenciaId")
+                    );
+
+                    groupItems.AddSimpleFor(f => f.Followup.Conteudo)
+                    .Editor(e => e
+                    .TextArea()
+                    .Height("200px")
+                    .Name("conteudo"));
+                });
+
+            }).FormData(Model))
+        </form>
+    </div>
+</div>
+
+@await Html.PartialAsync("~/Views/Shared/Modals/_ModalFooterWithSaveAndCancel.cshtml")

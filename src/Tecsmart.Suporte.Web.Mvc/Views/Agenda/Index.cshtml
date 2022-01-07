@@ -1,0 +1,87 @@
+﻿@using Tecsmart.Suporte.Web.Startup
+@{
+    ViewBag.Title = L("Agenda");
+    ViewBag.CurrentPageName = PageNames.Agenda;
+}
+@section scripts
+{
+    <environment names="Development">
+        <script src="~/view-resources/Views/Agenda/Index.js" asp-append-version="true"></script>
+    </environment>
+
+    <environment names="Staging,Production">
+        <script src="~/view-resources/Views/Agenda/Index.min.js" asp-append-version="true"></script>
+    </environment>
+}
+<section class="content-header">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-sm-12">
+                <h1>Agenda</h1>
+            </div>
+        </div>
+    </div>
+</section>
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body p-0">
+                        @(Html.DevExtreme().Scheduler()
+                            .ID("dxAgenda")
+                            .OnAppointmentClick("onAppointmentClick")
+                            .DataSource(d => d.Mvc()
+                                .Controller("Agenda")
+                                .LoadAction("GetAllTarefas")
+                                .Key("id")
+                            )
+                            .Views(new[] {
+                                SchedulerViewType.Day,
+                                SchedulerViewType.Week,
+                                SchedulerViewType.WorkWeek,
+                                SchedulerViewType.Month,
+                                SchedulerViewType.Agenda
+                            })
+                            .Editing(e =>
+                                e.AllowAdding(false)
+                                .AllowDragging(false)
+                                .AllowDeleting(false)
+                                .AllowUpdating(false)
+                            )
+                             .Resources(res =>
+                             {
+                                 res.Add()
+                                     .FieldExpr("statusId")
+                                     .ValueExpr("statusId")
+                                     .ColorExpr("color")
+                                     .AllowMultiple(true)
+                                     .UseColorAsDefault(true)
+                                     .DataSource(new[] {
+                                        new { statusId = 1, color = "#9E9E9E" },
+                                        new { statusId = 2, color = "#4CAF50" },
+                                        new { statusId = 3, color = "#f44336" }
+                                    });
+                             })
+                             .AppointmentTemplate(@<text>
+                                <div class="showtime-preview">
+                                    <div><%- appointmentData.descricao %></div>
+                                    <div><%- appointmentData.usuarioAtribuidoFkFullName %></div>
+                                    <div><strong><%- appointmentData.chamadoFkClienteFkNomeFantasia %></strong></div>
+                                </div>
+                            </text>)
+                            .ShowAllDayPanel(false)
+                            .CurrentView(SchedulerViewType.WorkWeek)
+                            .StartDayHour(7)
+                            .EndDayHour(19)
+                            .TextExpr("descricao")
+                            .StartDateExpr("dataTarefa")
+                            .EndDateExpr("dataVencimento")
+                            .DescriptionExpr("chamadoFkClienteFkNomeFantasia")
+                        )
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

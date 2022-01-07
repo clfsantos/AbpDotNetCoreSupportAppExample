@@ -1,0 +1,115 @@
+﻿@using Tecsmart.Suporte.Web.Startup
+@{
+    ViewBag.Title = L("Equipamentos");
+    ViewBag.CurrentPageName = PageNames.Equipamentos;
+}
+@section scripts
+{
+    <environment names="Development">
+        <script src="~/view-resources/Views/Equipamentos/Index.js" asp-append-version="true"></script>
+    </environment>
+
+    <environment names="Staging,Production">
+        <script src="~/view-resources/Views/Equipamentos/Index.min.js" asp-append-version="true"></script>
+    </environment>
+}
+<section class="content-header">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-sm-6">
+                <h1>@L("Equipamentos")</h1>
+            </div>
+            <div class="col-sm-6">
+                <ol class="breadcrumb float-sm-right">
+                    <li class="breadcrumb-item active">@L("Equipamentos")</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</section>
+<section class="content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header ctm-p-header">
+                        <div class="row">
+                            <div class="col-md-12">
+                                @(Html.DevExtreme().Toolbar()
+                                .ID("tbEquipamentos")
+                                .Items(items =>
+                                {
+                                    items.Add()
+                                    .Widget(w => w
+                                        .Button()
+                                        .Hint("Novo")
+                                        .OnClick("addEquipamento")
+                                        .Text("")
+                                        .Type(ButtonType.Default)
+                                        .Icon("add"))
+                                    .Location(ToolbarItemLocation.Before).LocateInMenu(ToolbarItemLocateInMenuMode.Auto);
+
+                                    items.Add()
+                                    .Widget(w => w
+                                        .Button()
+                                        .OnClick("viewFilterEquipamentos")
+                                        .Text("")
+                                        .Type(ButtonType.Normal)
+                                        .Icon("fas fa-filter"))
+                                    .Location(ToolbarItemLocation.After).LocateInMenu(ToolbarItemLocateInMenuMode.Auto);
+                                }))
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-body p-0">
+                        @(Html.DevExtreme().DataGrid()
+                            .ID("gridEquipamentos")
+                            .OnToolbarPreparing("gridEquipamentosToolbar")
+                            .DataSource(d => d.Mvc()
+                                .Controller("Equipamentos")
+                                .LoadAction("GetAllEquipamentos")
+                                .Key("id")
+                            )
+                            .Columns(c =>
+                            {
+                                c.Add().DataField("id").Caption("ID").DataType(GridColumnDataType.Number).SortOrder(SortOrder.Desc).Width(150);
+                                c.Add().DataField("dataInclusao").Caption("Data Inclusão").DataType(GridColumnDataType.Date);
+                                c.Add().DataField("descricao").Caption("Número de série").DataType(GridColumnDataType.String);
+                                c.Add().DataField("modeloFkDescricao").Caption("Modelo").DataType(GridColumnDataType.String);
+                                c.Add().DataField("clienteFkCpfCnpj").Caption("Cliente CPF/CNJP").DataType(GridColumnDataType.String);
+                                c.Add().DataField("clienteFkNomeFantasia").Caption("Cliente Fantasia").DataType(GridColumnDataType.String);
+                                c.Add().DataField("clienteFkRazaoSocial").Caption("Cliente Razão").DataType(GridColumnDataType.String);
+                                c.Add()
+                                .Type(GridCommandColumnType.Buttons)
+                                .Buttons(btns =>
+                                {
+                                    btns.Add()
+                                        .Text("Editar")
+                                        .Icon("fa fa-edit")
+                                        .Hint("Editar")
+                                        .OnClick("editEquipamento");
+                                    btns.Add()
+                                        .Text("Excluir")
+                                        .Icon("fas fa-trash")
+                                        .Hint("Excluir")
+                                        .OnClick("deleteEquipamento");
+                                });
+                            })
+                            .StateStoring(s => s
+                                .Enabled(true)
+                                .Type(StateStoringType.LocalStorage)
+                                .StorageKey("StgGridEquipamentos")
+                            )
+                            .Summary(s => s.TotalItems(items =>
+                            {
+                                items.Add().Column("id")
+                                    .SummaryType(SummaryType.Count);
+
+                            }))
+                        )
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

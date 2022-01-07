@@ -1,0 +1,596 @@
+﻿@using Tecsmart.Suporte.Web.Models.Chamados
+@using Tecsmart.Suporte.Authorization.Users
+@inject UserManager UserManager
+@model CreateOrEditChamadoViewModel
+
+@{ var hide = true;
+    var aberto = true;
+    var usuario = await UserManager.GetUserAsync(User);
+    var onClick = "cadastrarEditarChamado";
+    var btText = "Cadastrar";
+    var btIcon = "fas fa-save";
+    var hideImplantacao = true;
+    var hideManutencao = true;
+
+    if (Model.Chamado.Id > 0)
+    {
+        hide = false;
+        onClick = "cadastrarEditarChamado";
+        btText = "Atualizar";
+        if (Model.Chamado.ClassificacaoId == 3) hideImplantacao = false;
+        if (Model.Chamado.ClassificacaoId == 9) hideManutencao = false;
+        if (usuario.Id != Model.Chamado.ResponsavelAtualId)
+        {
+            onClick = "assumirChamado";
+            btText = "Assumir Chamado";
+            btIcon = "fas fa-exchange-alt";
+        }
+    }
+    if (Model.Chamado.Status > 1)
+    {
+        aberto = false;
+    }
+}
+
+@(Html.DevExtreme().Form<CreateOrEditChamadoViewModel>()
+    .ID(@Guid.NewGuid().ToString())
+    .OnContentReady("validateFormChamado")
+    .LabelLocation(FormLabelLocation.Top)
+    .Items(items =>
+    {
+        items.AddTabbed()
+        .CssClass("tab-panel-chamados")
+        .TabPanelOptions(o =>
+        {
+            o.DeferRendering(true);
+            o.FocusStateEnabled(false);
+        })
+        .Tabs(tabItems =>
+        {
+            tabItems.Add()
+            .Title("Chamado")
+            .Items(tabFormAbertura =>
+            {
+                tabFormAbertura.AddGroup()
+                .ColCount(12)
+                .Caption("Abertura")
+                .Items(groupItems =>
+                {
+                    groupItems.AddSimpleFor(c => c.Chamado.ClienteId)
+                    .Editor(e => e
+                    .DropDownBox()
+                    .ElementAttr("class", "dropDownBoxClientes")
+                    .DataSource(d => d.Mvc().Controller("Clientes").LoadAction("GetAllClientes").Key("id"))
+                    .ValueExpr("id")
+                    .DisplayExpr(new JS("comboClientesDisplayExpr"))
+                    .Placeholder("Selecione ...")
+                    .ContentTemplate(new TemplateName("ClientesDataGridSingle"))
+                    .OnInitialized("dDBClientesOnInitialized")
+                    .Name("clienteId")).ColSpan(10);
+
+                    groupItems.AddSimpleFor(c => c.Chamado.Contato)
+                    .Editor(e => e
+                    .TextBox()
+                    .Name("contato")).ColSpan(2);
+
+                    groupItems.AddSimpleFor(c => c.Chamado.OrigemId)
+                    .Editor(e => e
+                    .SelectBox()
+                    .DataSource(d => d.Mvc().Controller("Origens").LoadAction("GetAllOrigens").Key("id"))
+                    .DisplayExpr("descricao")
+                    .ValueExpr("id")
+                    .Value(hide ? 1 : Model.Chamado.OrigemId)
+                    .Name("origemId")).ColSpan(3);
+
+                    groupItems.AddSimpleFor(c => c.Chamado.ProdutoId)
+                    .Editor(e => e
+                    .SelectBox()
+                    .DataSource(d => d.Mvc().Controller("Produtos").LoadAction("GetAllProdutos").Key("id"))
+                    .DisplayExpr("descricao")
+                    .ValueExpr("id")
+                    .OnValueChanged("changeComboProdutos")
+                    .Name("produtoId")).ColSpan(3);
+
+                    groupItems.AddSimpleFor(c => c.Chamado.GrupoId)
+                    .Editor(e => e
+                    .SelectBox()
+                    .Disabled(true)
+                    .SearchEnabled(true)
+                    .DataSource(d => d.Mvc().Controller("Produtos").LoadAction("GetAllGrupos").Key("id"))
+                    .DisplayExpr("grupoFkDescricao")
+                    .ValueExpr("id")
+                    .ElementAttr("class", "grupoId")
+                    .OnValueChanged("changeComboGrupos")
+                    .Name("grupoId")).ColSpan(3);
+
+                    groupItems.AddSimpleFor(c => c.Chamado.SubGrupoId)
+                    .Editor(e => e
+                    .SelectBox()
+                    .Disabled(true)
+                    .SearchEnabled(true)
+                    .DataSource(d => d.Mvc().Controller("Produtos").LoadAction("GetAllSubGrupos").Key("id"))
+                    .DisplayExpr("subGrupoFkDescricao")
+                    .ValueExpr("id")
+                    .ElementAttr("class", "subGrupoId")
+                    .Name("subGrupoId")).ColSpan(3);
+
+                    groupItems.AddSimpleFor(c => c.Chamado.ClassificacaoId)
+                    .Editor(e => e
+                    .SelectBox()
+                    .DataSource(d => d.Mvc().Controller("Classificacoes").LoadAction("GetAllClassificacoes").Key("id"))
+                    .DisplayExpr("descricao")
+                    .ValueExpr("id")
+                    .Value(hide ? 1 : Model.Chamado.ClassificacaoId)
+                    .Hint("Hint")
+                    .OnSelectionChanged("classificacaoChanged")
+                    .Name("classificacaoId")).ColSpan(3);
+
+                    groupItems.AddSimpleFor(c => c.Chamado.SlaPrioridadeId)
+                    .Editor(e => e
+                    .SelectBox()
+                    .DataSource(d => d.Mvc().Controller("Slas").LoadAction("GetAllSlas").Key("id"))
+                    .DisplayExpr("descricao")
+                    .ValueExpr("id")
+                    .Value(hide ? 1 : Model.Chamado.SlaPrioridadeId)
+                    .OnSelectionChanged("slaChanged")
+                    .Name("slaPrioridadeId")).ColSpan(2);
+
+                    groupItems.AddSimpleFor(c => c.Chamado.SlaDataVencimento)
+                    .Editor(e => e
+                    .DateBox()
+                    .Type(DateBoxType.DateTime)
+                    .Disabled(true)
+                    .ElementAttr("class", "slaDataVencimento")
+                    .Name("slaDataVencimento")).ColSpan(3);
+
+                    groupItems.AddSimpleFor(c => c.Chamado.GerouFinanceiro)
+                    .Editor(e => e
+                    .Switch()
+                    .SwitchedOnText("Sim")
+                    .SwitchedOffText("Não")
+                    .Name("gerouFinanceiro")).ColSpan(2);
+
+                    groupItems.AddSimpleFor(c => c.Chamado.OsRelacionada)
+                    .Editor(e => e
+                    .NumberBox()
+                    .Name("osRelacionada")).ColSpan(2);
+
+                    groupItems.AddSimpleFor(c => c.Chamado.Ocorrencia)
+                    .Editor(e => e
+                    .TextArea()
+                    .Height("150px")
+                    .ElementAttr("class", "ocorrencia")
+                    .Name("ocorrencia")).ColSpan(12);
+
+                });//Grupo Abertura
+
+                tabFormAbertura.AddGroup()
+                .ColCount(12)
+                .Caption("Fechamento")
+                .Items(groupItems =>
+                {
+                    groupItems.AddSimpleFor(c => c.Chamado.ParecerFinal)
+                    .Editor(e => e
+                    .TextArea()
+                    .Height("150px")
+                    .Name("parecerFinal")).ColSpan(12);
+
+                    groupItems.AddSimpleFor(c => c.Chamado.ReleaseId)
+                    .Editor(e => e
+                    .DropDownBox()
+                    .DataSource(d => d.Mvc().Controller("Versoes").LoadAction("GetAllReleases").Key("id"))
+                    .ValueExpr("id")
+                    .DisplayExpr("versao")
+                    .Placeholder("Selecione ...")
+                    .ContentTemplate(new TemplateName("ReleasesDataGridSingle"))
+                    .Name("releaseId")).ColSpan(12);
+
+                    groupItems.AddSimpleFor(c => c.Chamado.FinalizarChamado)
+                    .Editor(e => e
+                    .CheckBox()
+                    .Value(!aberto)
+                    .Name("finalizarChamado")).ColSpan(12);
+
+                });//Grupo Fechamento
+
+                tabFormAbertura.AddGroup()
+                .ColCount(12)
+                .Caption("Detalhes")
+                .Items(groupItems =>
+                {
+                    groupItems.AddSimpleFor(c => c.Chamado.Id)
+                    .Editor(e => e
+                    .TextBox()
+                    .Disabled(true)
+                    .Name("id")).Label(l => l.Text("ID")).ColSpan(3);
+
+                    groupItems.AddSimpleFor(c => c.Chamado.Status)
+                    .Editor(e => e
+                    .SelectBox()
+                    .DataSource((new JS("[{ value: 1, text: 'Aberto' },{ value: 2, text: 'Fechado' },{ value: 3, text: 'Cancelado' }]")))
+                    .DisplayExpr("text")
+                    .ValueExpr("value")
+                    .Value(hide ? 1 : Model.Chamado.Status)
+                    .Disabled(true)
+                    .Name("status")).ColSpan(3);
+
+                    groupItems.AddSimpleFor(c => c.Chamado.ResponsavelId)
+                    .IsRequired(false)
+                    .Editor(e => e
+                    .SelectBox()
+                    .DataSource(d => d.Mvc().Controller("Users").LoadAction("GetAllUsers").Key("id"))
+                    .DisplayExpr("fullName")
+                    .ValueExpr("id")
+                    .Placeholder("")
+                    .Disabled(true)
+                    .Name("responsavelId")).ColSpan(3);
+
+                    groupItems.AddSimpleFor(c => c.Chamado.ResponsavelAtualId)
+                    .IsRequired(false)
+                    .Editor(e => e
+                    .SelectBox()
+                    .DataSource(d => d.Mvc().Controller("Users").LoadAction("GetAllUsers").Key("id"))
+                    .DisplayExpr("fullName")
+                    .ValueExpr("id")
+                    .Placeholder("")
+                    .Disabled(true)
+                    .Name("responsavelAtualId")).ColSpan(3);
+
+                    groupItems.AddSimpleFor(c => c.Chamado.DataAbertura)
+                    .IsRequired(false)
+                    .Editor(e => e
+                    .DateBox()
+                    .Type(DateBoxType.DateTime)
+                    .Value(hide ? DateTime.Now : Model.Chamado.DataAbertura)
+                    .Disabled(true)
+                    .Name("dataAbertura")).ColSpan(4);
+
+                    groupItems.AddSimpleFor(c => c.Chamado.DataEncerramento)
+                    .Editor(e => e
+                    .DateBox()
+                    .Type(DateBoxType.DateTime)
+                    .Value(hide ? null : Model.Chamado.DataEncerramento)
+                    .Disabled(true)
+                    .Name("dataEncerramento")).ColSpan(4);
+
+                    groupItems.AddSimpleFor(c => c.Chamado.ResponsavelFechamentoId)
+                    .Editor(e => e
+                    .SelectBox()
+                    .DataSource(d => d.Mvc().Controller("Users").LoadAction("GetAllUsers").Key("id"))
+                    .DisplayExpr("fullName")
+                    .ValueExpr("id")
+                    .Placeholder("")
+                    .Disabled(true)
+                    .Name("responsavelFechamentoId")).ColSpan(4);
+
+                });//Grupo Detalhes
+
+                tabFormAbertura.AddButton()
+                .Visible(aberto)
+                .HorizontalAlignment(HorizontalAlignment.Left)
+                .ButtonOptions(o => o
+                .ID(@Guid.NewGuid().ToString())
+                .Text(btText)
+                .Icon(btIcon)
+                .Type(ButtonType.Default)
+                .OnClick(onClick));
+
+            });//Tab Chamado
+            //Tab Follow-ups Inicio
+            tabItems.Add()
+            .Title("Follow-ups")
+            .Disabled(hide)
+            .Items(tabItemConf =>
+            {
+                tabItemConf.AddSimple()
+                .Template(@<text>
+                    @(Html.DevExtreme().DataGrid()
+                        .ID(@Guid.NewGuid().ToString())
+                        .ShowBorders(true)
+                        .ElementAttr("class", "gridFollowup")
+                        .OnToolbarPreparing("onToolbarFollowupsPreparing")
+                        .OnRowPrepared("formatRowFollowup")
+                        .DataSource(d => d.Mvc()
+                            .Controller("Chamados")
+                            .LoadAction("GetAllFollowups")
+                            .Key("id")
+                            .LoadParams(new { chamadoID = Model.Chamado.Id })
+                        )
+                        .AllowColumnReordering(false)
+                        .FilterRow(f => f.Visible(false))
+                        .GroupPanel(g => g.Visible(false))
+                        .HeaderFilter(f => f.Visible(false))
+                        .WordWrapEnabled(true)
+                        .Sorting(s => s.Mode(GridSortingMode.None))
+                        .ColumnChooser(c => c.Enabled(false))
+                        .Columns(c =>
+                        {
+                            c.Add().DataField("id").Caption("ID").SortOrder(SortOrder.Desc).DataType(GridColumnDataType.Number);
+                            c.Add().DataField("followupFkDataFollowup").Caption("Data").DataType(GridColumnDataType.DateTime);
+                            c.Add().DataField("followupFkConteudo").Caption("Conteúdo").DataType(GridColumnDataType.String);
+                            c.Add().DataField("followupFkEventoFkDescricao").Caption("Evento").DataType(GridColumnDataType.String).Visible(!hideManutencao);
+                            c.Add().DataField("followupFkUsuarioFkFullName").Caption("Usuário").DataType(GridColumnDataType.String);
+                            c.Add().DataField("followupFkUsuarioTransferenciaFkFullName").Caption("Transferido para").DataType(GridColumnDataType.String);
+                            c.Add().Caption("Ações")
+                                .Type(GridCommandColumnType.Buttons)
+                                .Buttons(btns =>
+                                {
+                                    btns.Add()
+                                        .Text("Editar")
+                                        .Icon("fa fa-edit")
+                                        .Hint("Editar")
+                                        .Visible(aberto)
+                                        .OnClick("editarFollowupModal");
+                                    btns.Add()
+                                        .Text("Excluir")
+                                        .Icon("fa fa-ban")
+                                        .Visible(aberto)
+                                        .Hint("Recusar")
+                                        .OnClick("cancelarFollowup");
+                                });
+                        })
+                    )
+                </text>);
+            });//Tab Follow-ups
+
+            tabItems.Add()
+            .Title("Tarefas")
+            .Disabled(hide)
+            .Items(tabItemConf =>
+            {
+                tabItemConf.AddSimple()
+                    .Template(@<text>
+                        @(Html.DevExtreme().DataGrid()
+                            .ID(@Guid.NewGuid().ToString())
+                            .ShowBorders(true)
+                            .ElementAttr("class", "gridTarefas")
+                            .OnCellDblClick("tarefasDblClick")
+                            .OnToolbarPreparing("onToolbarTarefasPreparing")
+                            .OnRowPrepared("formatRowTarefas")
+                            .DataSource(d => d.Mvc()
+                                .Controller("Chamados")
+                                .LoadAction("GetAllTarefas")
+                                .Key("id")
+                                .LoadParams(new { chamadoID = Model.Chamado.Id })
+                            )
+                            .AllowColumnReordering(false)
+                            .FilterRow(f => f.Visible(false))
+                            .GroupPanel(g => g.Visible(false))
+                            .HeaderFilter(f => f.Visible(false))
+                            .WordWrapEnabled(true)
+                            .Sorting(s => s.Mode(GridSortingMode.None))
+                            .ColumnChooser(c => c.Enabled(false))
+                            .Columns(c =>
+                            {
+                                c.Add().DataField("id").Caption("ID").SortOrder(SortOrder.Desc).DataType(GridColumnDataType.Number);
+                                c.Add().DataField("dataTarefa").Caption("Data").DataType(GridColumnDataType.DateTime);
+                                c.Add().DataField("descricao").Caption("Conteúdo").DataType(GridColumnDataType.String);
+                                c.Add().DataField("usuarioAtribuidoFkFullName").Caption("Atribuída para").DataType(GridColumnDataType.String);
+                                c.Add().Caption("Ações")
+                                    .Type(GridCommandColumnType.Buttons)
+                                    .Buttons(btns =>
+                                    {
+                                        btns.Add()
+                                            .Text("Editar")
+                                            .Icon("fa fa-edit")
+                                            .Hint("Editar")
+                                            .Visible(aberto)
+                                            .OnClick("editarTarefaModal");
+                                        btns.Add()
+                                            .Text("Cancelar")
+                                            .Icon("fa fa-ban")
+                                            .Visible(aberto)
+                                            .Hint("Cancelar")
+                                            .OnClick("cancelarTarefa");
+                                    });
+                            })
+                        )
+                    </text>);
+            });//Tab Tarefas
+
+            tabItems.Add()
+            .Title("Implantação")
+            .Disabled(hideImplantacao)
+            .Items(tabItemConf =>
+            {
+                tabItemConf.AddSimple()
+                    .Template(@<text>
+                        @(Html.DevExtreme().DataGrid()
+                            .ID(@Guid.NewGuid().ToString())
+                            .ShowBorders(true)
+                            .ElementAttr("class", "gridImplantacao")
+                            .OnRowPrepared("formatRowImplantacao")
+                            .HoverStateEnabled(false)
+                            .FocusedRowEnabled(false)
+                            .DataSource(d => d.Mvc()
+                                .Controller("Chamados")
+                                .LoadAction("GetAllEtapas")
+                                .Key("id")
+                                .LoadParams(new { chamadoID = Model.Chamado.Id })
+                            )
+                            .AllowColumnReordering(false)
+                            .FilterRow(f => f.Visible(false))
+                            .GroupPanel(g => g.Visible(false))
+                            .HeaderFilter(f => f.Visible(false))
+                            .WordWrapEnabled(true)
+                            .Sorting(s => s.Mode(GridSortingMode.None))
+                            .ColumnChooser(c => c.Enabled(false))
+                            .Columns(c =>
+                            {
+                                c.Add().DataField("etapaFkSequencia").Caption("#").SortOrder(SortOrder.Desc).DataType(GridColumnDataType.Number);
+                                c.Add().DataField("dataEtapa").Caption("Data Início").DataType(GridColumnDataType.DateTime);
+                                c.Add().DataField("etapaFkDescricao").Caption("Etapa").DataType(GridColumnDataType.String);
+                                c.Add().DataField("observacao").Caption("OBS").DataType(GridColumnDataType.String);
+                                c.Add().DataField("etapaFkResponsavelFkFullName").Caption("Responsável").DataType(GridColumnDataType.String);
+                                c.Add().DataField("etapaStatusFkDescricao").Caption("Status").SortOrder(SortOrder.Asc).DataType(GridColumnDataType.String);
+                                c.Add().Caption("Ações")
+                                    .Type(GridCommandColumnType.Buttons)
+                                    .Buttons(btns =>
+                                    {
+                                        btns.Add()
+                                            .Text("Editar")
+                                            .Icon("fa fa-edit")
+                                            .Hint("Editar")
+                                            .OnClick("editarEtapaChamadoModal");
+                                        btns.Add()
+                                            .Text("Aprovar")
+                                            .Icon("fas fa-check")
+                                            .Hint("Aprovar / Concluir")
+                                            .OnClick("aprovarConcluirEtapa");
+                                        btns.Add()
+                                            .Text("Recusar")
+                                            .Icon("fas fa-ban")
+                                            .Hint("Excluir")
+                                            .OnClick("recusarEtapaChamadoModal");
+                                    });
+                            })
+                        )
+                    </text>);
+            });//Tab Implantação
+
+            tabItems.Add()
+            .Title("Manutenção")
+            .Disabled(hideManutencao)
+            .Items(tabItemConf =>
+            {
+                tabItemConf.AddSimple()
+                .Template(@<text>
+                    <div class="assistenciaPartial">
+                        @await Html.PartialAsync("_AssistenciaView", Model)
+                    </div>
+                </text>);
+
+            });//Tab Manutenção
+
+            tabItems.Add()
+            .Title("Anexos")
+            .Disabled(hide)
+            .Items(tabItemConf =>
+            {
+                tabItemConf.AddSimple()
+                    .Template(@<text>
+                        @(Html.DevExtreme().DataGrid()
+                            .ID(@Guid.NewGuid().ToString())
+                            .ShowBorders(true)
+                            .ElementAttr("class", "gridAnexos")
+                            .OnToolbarPreparing("onToolbarAnexosPreparing")
+                            .DataSource(d => d.Mvc()
+                                .Controller("Chamados")
+                                .LoadAction("GetAllAnexos")
+                                .Key("id")
+                                .LoadParams(new { chamadoID = Model.Chamado.Id })
+                            )
+                            .AllowColumnReordering(false)
+                            .FilterRow(f => f.Visible(false))
+                            .GroupPanel(g => g.Visible(false))
+                            .HeaderFilter(f => f.Visible(false))
+                            .WordWrapEnabled(true)
+                            .Sorting(s => s.Mode(GridSortingMode.None))
+                            .ColumnChooser(c => c.Enabled(false))
+                            .Columns(c =>
+                            {
+                                c.Add().DataField("id").Caption("ID").SortOrder(SortOrder.Desc).DataType(GridColumnDataType.Number);
+                                c.Add().DataField("dataUpload").Caption("Data Upload").DataType(GridColumnDataType.DateTime);
+                                c.Add().DataField("nome").Caption("Nome").DataType(GridColumnDataType.String);
+                                c.Add().DataField("usuarioFkFullName").Caption("Usuário").DataType(GridColumnDataType.String);
+                                c.Add().Caption("Ações")
+                                    .Type(GridCommandColumnType.Buttons)
+                                    .Buttons(btns =>
+                                    {
+                                        btns.Add()
+                                            .Text("Ver")
+                                            .Icon("fas fa-eye")
+                                            .Hint("Ver Arquivo")
+                                            .OnClick("viewArquivo");
+                                        btns.Add()
+                                            .Text("Download")
+                                            .Icon("fas fa-download")
+                                            .Hint("Baixar Anexo")
+                                            .OnClick("downloadArquivo");
+                                        btns.Add()
+                                            .Text("Excluir")
+                                            .Icon("fa fa-trash")
+                                            .Hint("Excluir Anexo")
+                                            .OnClick("excluirAnexo");
+                                    });
+                            })
+                        )
+                    </text>);
+            });//Tab Anexos
+        });//Tabs
+
+    }).FormData(Model))
+
+
+@using (Html.DevExtreme().NamedTemplate("ClientesDataGridSingle"))
+{
+    @(Html.DevExtreme().DataGrid()
+        .OnRowPrepared("formataComboClientes")
+        .OnInitialized("dxComboClientesOnInitialized")
+        .DataSource(new JS(@"component.getDataSource()"))
+        .SearchPanel(
+            sp => sp.Visible(true).Width(300)
+        )
+        .Columns(columns => {
+            columns.Add().DataField("id").Caption("ID").Width("10%");
+            columns.Add().DataField("nomeFantasia").Caption("Fantasia").Width("30%");
+            columns.Add().DataField("razaoSocial").Caption("Razão").Width("30%");
+            columns.Add().DataField("cpfCnpj").Caption("CNPJ/CPF").Width("20%").Format(new JS("formatCNPJ"));
+            columns.Add().DataField("isClienteMensalista").Caption("Mensalista").TrueText("Sim").FalseText("Não").Width("10%");
+            columns.Add().Width("5%")
+                .Type(GridCommandColumnType.Buttons)
+                .Buttons(btns =>
+                {
+                    btns.Add()
+                        .Icon("fa fa-info")
+                        .Hint("Informações da Empresa")
+                        .OnClick("showPopEmpresa");
+                });
+        })
+        .ColumnChooser(ch => ch.Enabled(false))
+        .GroupPanel(gp => gp.Visible(false))
+        .Height(400)
+        .Selection(s => s.Mode(SelectionMode.Single))
+        .SelectedRowKeys(new JS(@"[component.option(""value"")]"))
+        .OnSelectionChanged(@<text>
+            function(selectedItems) {
+                var keys = selectedItems.selectedRowKeys;
+                component.option("value", keys);
+                if (keys.length > 0) {
+                    component.close();
+                }
+            }
+        </text>)
+    )
+}
+
+@using (Html.DevExtreme().NamedTemplate("ReleasesDataGridSingle"))
+{
+    @(Html.DevExtreme().DataGrid()
+        .DataSource(new JS(@"component.getDataSource()"))
+        .SearchPanel(
+            sp => sp.Visible(true).Width(300)
+        )
+        .Columns(columns => {
+            columns.Add().DataField("dataRelease").Caption("Data").DataType(GridColumnDataType.Date).SortOrder(SortOrder.Desc);
+            columns.Add().DataField("produtoFkDescricao").Caption("Produto").DataType(GridColumnDataType.String);
+            columns.Add().DataField("versao").Caption("Release").DataType(GridColumnDataType.String);
+        })
+        .ColumnChooser(ch => ch.Enabled(false))
+        .GroupPanel(gp => gp.Visible(false))
+        .Height(400)
+        .Selection(s => s.Mode(SelectionMode.Single))
+        .SelectedRowKeys(new JS(@"[component.option(""value"")]"))
+        .OnSelectionChanged(@<text>
+            function(selectedItems) {
+                var keys = selectedItems.selectedRowKeys;
+                component.option("value", keys);
+                if (keys.length > 0) {
+                    component.close();
+                }
+            }
+        </text>)
+    )
+}
+
+<div class="popempresa"></div>

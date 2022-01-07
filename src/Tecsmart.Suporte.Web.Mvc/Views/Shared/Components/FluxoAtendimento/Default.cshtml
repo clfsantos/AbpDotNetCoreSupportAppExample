@@ -1,0 +1,12 @@
+﻿@using Tecsmart.Suporte.Web.Views.Shared.Components.FluxoAtendimento
+@model FluxoAtendimentoViewModel
+@{
+    int counter = 1;
+}
+<ol class="breadcrumb fluxobreadcrumb">
+    @foreach (var item in Model.PrioridadeFluxo)
+    {
+        <li class="breadcrumb-item @(counter == 1 ? "active" : "") @(item.StatusRamal ? "ocupado" : "")">@Html.DisplayFor(modelItem => item.UsuarioFkName) (@Html.DisplayFor(modelItem => item.Id))</li>
+        counter = counter + 1;
+    }
+</ol>
