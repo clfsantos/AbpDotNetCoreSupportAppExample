@@ -1,0 +1,1 @@
+This is an example of a real application I made for the company I worked for (Tecsmart Sistemas). The backend of the application is made with .NetCore MVC and ABP Framework. The frontend with DevExpress and jQuery. The database used was PostgreSQL.
